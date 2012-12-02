@@ -21,11 +21,9 @@ func main() {
 	logo := gtk.ImageFromFile("logo.png")
 	button := gtk.ButtonWithLabel("Log inn")
 	frame := gtk.Frame("Logg deg på petter-samsung")
-	//frame.label_xalign = 0.5
+	frame.SetLabelAlign(0.5, 0.5)
 	userlabel := gtk.Label("Lånenummer/brukernavn")
-	//userlabel.set_alignment 1, 0.5
 	pinlabel := gtk.Label("PIN-kode/passord")
-	// pinlabel.set_alignment 1, 0.5
 	table := gtk.Table(3, 2, false)
 
 	vbox := gtk.VBox(false, 20)
@@ -37,31 +35,17 @@ func main() {
 	pinentry.SetVisibility(false)
 	pinentry.SetMaxLength(10)
 
-	// type GtkAttachOptions int
-
-	// const (
-	// 	GTK_EXPAND GtkAttachOptions = 1 << 0
-	// 	GTK_SHRINK GtkAttachOptions = 1 << 1
-	// 	GTK_FILL   GtkAttachOptions = 1 << 2
-	// )
+	// 	GTK_EXPAND / GTK_SHRINK / GTK_FILL
 	table.Attach(userlabel, 0, 1, 0, 1, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
 	table.Attach(userentry, 1, 2, 0, 1, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
 	table.Attach(pinlabel, 0, 1, 1, 2, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
 	table.Attach(pinentry, 1, 2, 1, 2, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
 	table.Attach(button, 1, 2, 2, 3, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
-	// table.attach userlabel, 0, 1, 0, 1
-	// table.attach @userentry, 1, 2, 0, 1
-	// table.attach pinlabel, 0, 1, 1, 2
-	// table.attach @pinentry, 1, 2, 1, 2
-	// table.attach button, 1, 2, 2, 3
+	error := gtk.Label("")
 
-	// error = Gtk::Label.new
 	vbox.Add(logo)
 	vbox.Add(table)
-	// vbox.pack_start_defaults logo
-	// vbox.pack_start_defaults table
-	// vbox.pack_end_defaults error
-	// vbox.set_border_width 20
+	vbox.Add(error)
 	vbox.SetBorderWidth(20)
 	frame.Add(vbox)
 
