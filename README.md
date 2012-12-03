@@ -14,8 +14,7 @@ In addition, you need the GTK development headers:
 Then fetch and compile the client using the go command:
 
     go get github.com/digibib/mycel-client
-    go build
+    go build client.go
 
 [Mycel]: https://github.com/digibib/mycel
-[Go]: http://golang.org/doc/install
 [installation instructions]: http://golang.org/doc/install
