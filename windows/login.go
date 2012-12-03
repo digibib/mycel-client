@@ -60,8 +60,12 @@ func Login(client string) (user, password string) {
 		user = userentry.GetText()
 		password = pinentry.GetText()
 		if kev.Keyval == gdk.GDK_KEY_Return {
-			if (user != "") && (password != "") {
-				gtk.MainQuit()
+			if user != "" {
+				if password != "" {
+					gtk.MainQuit()
+				} else {
+					pinentry.GrabFocus()
+				}
 			}
 		}
 	}
