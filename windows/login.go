@@ -1,8 +1,13 @@
 package windows
 
-import "github.com/mattn/go-gtk/gtk"
+import (
+	"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/glib"
+	"github.com/mattn/go-gtk/gtk"
+	"unsafe"
+)
 
-func Login(client string) {
+func Login(client string) (user, password string) {
 	// Inital window configuration
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.Fullscreen()
@@ -49,10 +54,28 @@ func Login(client string) {
 		println("quitting..")
 		gtk.MainQuit()
 	})
+	validate := func(ctx *glib.CallbackContext) {
+		arg := ctx.Args(0)
+		kev := *(**gdk.EventKey)(unsafe.Pointer(&arg))
+		user = userentry.GetText()
+		password = pinentry.GetText()
+		if kev.Keyval == gdk.GDK_KEY_Return {
+			if (user != "") && (password != "") {
+				gtk.MainQuit()
+			}
+		}
+	}
+	pinentry.Connect("key-press-event", validate)
+	userentry.Connect("key-press-event", validate)
 	button.Connect("clicked", func() {
-		println("clik")
-		gtk.MainQuit()
+		user = userentry.GetText()
+		password = pinentry.GetText()
+		if (user != "") && (password != "") {
+			gtk.MainQuit()
+		}
 	})
 
 	window.ShowAll()
+	gtk.Main()
+	return user, password
 }

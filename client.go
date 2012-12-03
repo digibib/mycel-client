@@ -73,6 +73,6 @@ func main() {
 
 	// Show login screen
 	gtk.Init(nil)
-	windows.Login(client.Name)
-	gtk.Main()
+	user, password := windows.Login(client.Name)
+	println(user, password)
 }
