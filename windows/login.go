@@ -7,6 +7,11 @@ import (
 	"unsafe"
 )
 
+// Request the Mycel API to authenticate a user, given username and password
+func authenticate(username, password string) (err error, authenticated bool) {
+	return
+}
+
 func Login(client string) (user, password string) {
 	// Inital window configuration
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
