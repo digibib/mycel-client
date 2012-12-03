@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	//	"fmt"
 	"github.com/mattn/go-gtk/gtk"
 	"io/ioutil"
 	"log"
@@ -61,11 +60,18 @@ func main() {
 	}
 	MAC := strings.TrimSpace(string(eth0))
 
+	// Identify the client
 	client, err := Identify(MAC)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Do local modifications to environment
+	// 1. Screen Resolution
+	// 2. Firefox homepage
+	// 3. Printer address
+
+	// Show login screen
 	gtk.Init(nil)
 	windows.Login(client.Name)
 	gtk.Main()
