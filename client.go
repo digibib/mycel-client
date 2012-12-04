@@ -55,7 +55,7 @@ func identify(MAC string) (client *Client, err error) {
 }
 
 // Do local modifications to the client's environment
-func localMods(screenRes string) {
+func localMods(screenRes, homepage string) {
 	// 1. Screen Resolution
 	xrandr, err := exec.Command("/usr/bin/xrandr").Output()
 	if err != nil {
@@ -70,6 +70,15 @@ func localMods(screenRes string) {
 	}
 
 	// 2. Firefox homepage
+	escHomepage := strings.Replace(homepage, `/`, `\/`, -1)
+
+	sed := `/bin/sed -i 's/user_pref("browser.startup.homepage",.*/user_pref("browser.startup.homepage","` +
+		escHomepage + `");/' $HOME/.mozilla/firefox/*.default/prefs.js`
+	cmd = exec.Command("/bin/sh", "-c", sed)
+	err = cmd.Run()
+	if err != nil {
+		print("DEBUG: failed to set Firefox startpage")
+	}
 	// 3. Printer address
 
 }
@@ -89,7 +98,7 @@ func main() {
 	}
 
 	// Do local mods (screenRes, Firefox Homepage, Printer adress)
-	localMods("1600x900")
+	localMods("1600x900", "http://morgenbladet.no")
 
 	// Show login screen
 	gtk.Init(nil)
