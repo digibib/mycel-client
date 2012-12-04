@@ -55,7 +55,7 @@ func identify(MAC string) (client *Client, err error) {
 }
 
 // Do local modifications to the client's environment
-func localMods(screenRes, homepage string) {
+func localMods(screenRes, homepage, printer string) {
 	// 1. Screen Resolution
 	xrandr, err := exec.Command("/usr/bin/xrandr").Output()
 	if err != nil {
@@ -66,7 +66,7 @@ func localMods(screenRes, homepage string) {
 	cmd := exec.Command("/bin/sh", "-c", "/usr/bin/xrandr --output "+string(display)+" --mode "+screenRes)
 	err = cmd.Run()
 	if err != nil {
-		print("DEBUG: xrandr change mode failed")
+		println("DEBUG: xrandr change mode failed")
 	}
 
 	// 2. Firefox homepage
@@ -77,10 +77,15 @@ func localMods(screenRes, homepage string) {
 	cmd = exec.Command("/bin/sh", "-c", sed)
 	err = cmd.Run()
 	if err != nil {
-		print("DEBUG: failed to set Firefox startpage")
+		println("DEBUG: failed to set Firefox startpage")
 	}
-	// 3. Printer address
 
+	// 3. Printer address
+	cmd = exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p skranken -v "+printer)
+	err = cmd.Run()
+	if err != nil {
+		println("DEBUG: failed to set network printer address")
+	}
 }
 
 func main() {
@@ -98,7 +103,7 @@ func main() {
 	}
 
 	// Do local mods (screenRes, Firefox Homepage, Printer adress)
-	localMods("1600x900", "http://morgenbladet.no")
+	localMods("1600x900", "http://morgenbladet.no", "socket://10.172.2.31:9000")
 
 	// Show login screen
 	gtk.Init(nil)
