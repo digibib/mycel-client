@@ -127,7 +127,7 @@ func Login(client string) (user, password string) {
 	button.Connect("clicked", func() {
 		username := userentry.GetText()
 		password := pinentry.GetText()
-		if (username == "") && (password == "") {
+		if (username == "") || (password == "") {
 			error.SetMarkup("<span foreground='red'>Skriv inn ditt lånenummer og PIN-kode</span>")
 			userentry.GrabFocus()
 			return
