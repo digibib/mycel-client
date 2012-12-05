@@ -83,15 +83,11 @@ func Login(client string) (user, password string) {
 	center.Add(frame)
 	window.Add(center)
 
-	// Connect signal callbacks (GUI events)
-	window.Connect("destroy", func() {
-		println("quitting..")
-		gtk.MainQuit()
-	})
+	// Functions to validate and check responses
 	checkResponse := func(username, password string) {
 		user, err := authenticate(username, password)
 		if err != nil {
-			println("DEBUG: authentication call failed")
+			println("DEBUG: call to api/users/authenticate failed")
 			error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
 			return
 		}
@@ -120,8 +116,9 @@ func Login(client string) (user, password string) {
 			}
 			checkResponse(username, password)
 		}
-
 	}
+
+	// Connect GUI event signals to function callbacks
 	pinentry.Connect("key-press-event", validate)
 	userentry.Connect("key-press-event", validate)
 	button.Connect("clicked", func() {
@@ -133,6 +130,10 @@ func Login(client string) (user, password string) {
 			return
 		}
 		checkResponse(username, password)
+	})
+	window.Connect("destroy", func() {
+		println("quitting..")
+		gtk.MainQuit()
 	})
 
 	window.ShowAll()
