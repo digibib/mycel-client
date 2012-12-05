@@ -81,6 +81,9 @@ func Login(client string) (user, password string) {
 		password = pinentry.GetText()
 		if (user != "") && (password != "") {
 			gtk.MainQuit()
+		} else {
+			error.SetMarkup("<span foreground='red'>Skriv inn ditt lånenummer og PIN-kode</span>")
+			userentry.GrabFocus()
 		}
 	})
 
