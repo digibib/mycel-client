@@ -88,42 +88,7 @@ func Login(client string) (user, password string) {
 		println("quitting..")
 		gtk.MainQuit()
 	})
-	validate := func(ctx *glib.CallbackContext) {
-		arg := ctx.Args(0)
-		kev := *(**gdk.EventKey)(unsafe.Pointer(&arg))
-		username := userentry.GetText()
-		password := pinentry.GetText()
-		if kev.Keyval == gdk.GDK_KEY_Return {
-			if username != "" {
-				if password == "" {
-					pinentry.GrabFocus()
-					return
-				}
-				user, err := authenticate(username, password)
-				if err != nil {
-					println("DEBUG: authentication call failed")
-					error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
-					return
-				}
-				if user.Authenticated {
-					gtk.MainQuit()
-				} else {
-					error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
-				}
-
-			}
-		}
-	}
-	pinentry.Connect("key-press-event", validate)
-	userentry.Connect("key-press-event", validate)
-	button.Connect("clicked", func() {
-		username := userentry.GetText()
-		password := pinentry.GetText()
-		if (username == "") && (password == "") {
-			error.SetMarkup("<span foreground='red'>Skriv inn ditt lånenummer og PIN-kode</span>")
-			userentry.GrabFocus()
-			return
-		}
+	checkResponse := func(username, password string) {
 		user, err := authenticate(username, password)
 		if err != nil {
 			println("DEBUG: authentication call failed")
@@ -135,6 +100,39 @@ func Login(client string) (user, password string) {
 		} else {
 			error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
 		}
+	}
+	validate := func(ctx *glib.CallbackContext) {
+		arg := ctx.Args(0)
+		kev := *(**gdk.EventKey)(unsafe.Pointer(&arg))
+		username := userentry.GetText()
+		password := pinentry.GetText()
+		if kev.Keyval == gdk.GDK_KEY_Return {
+			if username == "" && password == "" {
+				return
+			}
+			if username != "" && password == "" {
+				pinentry.GrabFocus()
+				return
+			}
+			if password != "" && username == "" {
+				userentry.GrabFocus()
+				return
+			}
+			checkResponse(username, password)
+		}
+
+	}
+	pinentry.Connect("key-press-event", validate)
+	userentry.Connect("key-press-event", validate)
+	button.Connect("clicked", func() {
+		username := userentry.GetText()
+		password := pinentry.GetText()
+		if (username == "") && (password == "") {
+			error.SetMarkup("<span foreground='red'>Skriv inn ditt lånenummer og PIN-kode</span>")
+			userentry.GrabFocus()
+			return
+		}
+		checkResponse(username, password)
 	})
 
 	window.ShowAll()
