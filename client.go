@@ -60,7 +60,7 @@ func localMods(screenRes, homepage, printer string) {
 	// 1. Screen Resolution
 	xrandr, err := exec.Command("/usr/bin/xrandr").Output()
 	if err != nil {
-		//log.Fatal(err)
+		println("DEBUG: couldn't find or access xrandr")
 	}
 	r, _ := regexp.Compile(`([\w]+)\sconnected`)
 	display := r.FindSubmatch(xrandr)[1]
