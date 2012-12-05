@@ -11,7 +11,7 @@ import (
 	"unsafe"
 )
 
-// JSON response struct from api/users/sauthentication
+// response struct to match JSON response from api/users/authentication
 type response struct {
 	Age           int
 	Authenticated bool
@@ -19,7 +19,8 @@ type response struct {
 	Minutes       int
 }
 
-// Request the Mycel API to authenticate a user with the username and password
+// authenticate returns a user struct response from the mycel API
+// given a username and password
 func authenticate(username, password string) (r *response, err error) {
 	u := "http://localhost:9000/api/users/authenticate"
 	resp, err := http.PostForm(u, url.Values{"username": {username}, "password": {password}})
@@ -38,6 +39,8 @@ func authenticate(username, password string) (r *response, err error) {
 	return
 }
 
+// Login creates a GTK fullscreen window where users can log inn.
+// It returns when a user successfully authenticates.
 func Login(client string) (user, password string) {
 	// Inital window configuration
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)

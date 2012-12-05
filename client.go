@@ -18,6 +18,7 @@ type response struct {
 	Client Client
 }
 
+// Client struct to match JSON response from Mycel api/clients.
 type Client struct {
 	Id        int
 	Name      string
@@ -27,7 +28,7 @@ type Client struct {
 }
 
 // These fields must be pointers, in case of null value from JSON
-// When dereferencing check for nil pointers
+// When dereferencing check for nil pointers.
 type options struct {
 	AgeL     *int    `json:"age_limit_lower"`
 	AgeH     *int    `json:"age_limit_higher"`
@@ -35,7 +36,7 @@ type options struct {
 	Homepage *string
 }
 
-// Identifies the client from the mac-address and return Client struct
+// identify sends the client's mac-address to the Mycel API and returns a Client struct.
 func identify(MAC string) (client *Client, err error) {
 	url := "http://localhost:9000/api/clients/?mac=" + MAC
 	resp, err := http.Get(url)
@@ -54,7 +55,7 @@ func identify(MAC string) (client *Client, err error) {
 	return &r.Client, nil
 }
 
-// Do local modifications to the client's environment
+// localMods makes modifications to the client's environment.
 func localMods(screenRes, homepage, printer string) {
 	// 1. Screen Resolution
 	xrandr, err := exec.Command("/usr/bin/xrandr").Output()
