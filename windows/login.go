@@ -1,14 +1,40 @@
 package windows
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
+	"net/http"
+	"net/url"
 	"unsafe"
 )
 
-// Request the Mycel API to authenticate a user, given username and password
-func authenticate(username, password string) (err error, authenticated bool) {
+// JSON response struct from api/users/sauthentication
+type response struct {
+	Age           int
+	Authenticated bool
+	Message       string
+	Minutes       int
+}
+
+// Request the Mycel API to authenticate a user with the username and password
+func authenticate(username, password string) (r *response, err error) {
+	u := "http://localhost:9000/api/users/authenticate"
+	resp, err := http.PostForm(u, url.Values{"username": {username}, "password": {password}})
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+	r = new(response)
+	err = json.NewDecoder(resp.Body).Decode(r)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -62,32 +88,53 @@ func Login(client string) (user, password string) {
 	validate := func(ctx *glib.CallbackContext) {
 		arg := ctx.Args(0)
 		kev := *(**gdk.EventKey)(unsafe.Pointer(&arg))
-		user = userentry.GetText()
-		password = pinentry.GetText()
+		username := userentry.GetText()
+		password := pinentry.GetText()
 		if kev.Keyval == gdk.GDK_KEY_Return {
-			if user != "" {
-				if password != "" {
+			if username != "" {
+				if password == "" {
+					pinentry.GrabFocus()
+					return
+				}
+				user, err := authenticate(username, password)
+				if err != nil {
+					println("DEBUG: authentication call failed")
+					error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
+					return
+				}
+				if user.Authenticated {
 					gtk.MainQuit()
 				} else {
-					pinentry.GrabFocus()
+					error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
 				}
+
 			}
 		}
 	}
 	pinentry.Connect("key-press-event", validate)
 	userentry.Connect("key-press-event", validate)
 	button.Connect("clicked", func() {
-		user = userentry.GetText()
-		password = pinentry.GetText()
-		if (user != "") && (password != "") {
-			gtk.MainQuit()
-		} else {
+		username := userentry.GetText()
+		password := pinentry.GetText()
+		if (username == "") && (password == "") {
 			error.SetMarkup("<span foreground='red'>Skriv inn ditt lånenummer og PIN-kode</span>")
 			userentry.GrabFocus()
+			return
+		}
+		user, err := authenticate(username, password)
+		if err != nil {
+			println("DEBUG: authentication call failed")
+			error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
+			return
+		}
+		if user.Authenticated {
+			gtk.MainQuit()
+		} else {
+			error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
 		}
 	})
 
 	window.ShowAll()
 	gtk.Main()
-	return user, password
+	return
 }
