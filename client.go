@@ -34,6 +34,7 @@ type options struct {
 	AgeH     *int    `json:"age_limit_higher"`
 	Printer  *string `json:"printeraddr"`
 	Homepage *string
+	Minutes  *int `json:"time_limit"`
 }
 
 // identify sends the client's mac-address to the Mycel API and returns a Client struct.
@@ -108,6 +109,6 @@ func main() {
 
 	// Show login screen
 	gtk.Init(nil)
-	user, password := windows.Login(client.Name)
+	user, password := windows.Login(client.Name, *client.Options.Minutes-60)
 	println(user, password)
 }

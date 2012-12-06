@@ -41,7 +41,7 @@ func authenticate(username, password string) (r *response, err error) {
 
 // Login creates a GTK fullscreen window where users can log inn.
 // It returns when a user successfully authenticates.
-func Login(client string) (user, password string) {
+func Login(client string, extraMinutes int) (user, password string) {
 	// Inital window configuration
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	window.Fullscreen()
@@ -92,7 +92,11 @@ func Login(client string) (user, password string) {
 			return
 		}
 		if user.Authenticated {
-			gtk.MainQuit()
+			if user.Minutes+extraMinutes <= 0 {
+				error.SetMarkup("<span foreground='red'>Beklager, du har brukt opp kvoten din for i dag!</span>")
+			} else {
+				gtk.MainQuit()
+			}
 		} else {
 			error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
 		}
@@ -138,5 +142,7 @@ func Login(client string) (user, password string) {
 
 	window.ShowAll()
 	gtk.Main()
+	user = userentry.GetText()
+	password = pinentry.GetText()
 	return
 }
