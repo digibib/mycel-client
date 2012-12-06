@@ -135,9 +135,8 @@ func Login(client string, extraMinutes int) (user, password string) {
 		}
 		checkResponse(username, password)
 	})
-	window.Connect("destroy", func() {
-		println("quitting..")
-		gtk.MainQuit()
+	window.Connect("delete-event", func() bool {
+		return true
 	})
 
 	window.ShowAll()
