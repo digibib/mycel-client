@@ -91,15 +91,15 @@ func Login(client string, extraMinutes int) (user, password string) {
 			error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
 			return
 		}
-		if user.Authenticated {
-			if user.Minutes+extraMinutes <= 0 {
-				error.SetMarkup("<span foreground='red'>Beklager, du har brukt opp kvoten din for i dag!</span>")
-			} else {
-				gtk.MainQuit()
-			}
-		} else {
+		if !user.Authenticated {
 			error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
+			return
 		}
+		if user.Minutes+extraMinutes <= 0 {
+			error.SetMarkup("<span foreground='red'>Beklager, du har brukt opp kvoten din for i dag!</span>")
+			return
+		}
+		gtk.MainQuit()
 	}
 	validate := func(ctx *glib.CallbackContext) {
 		arg := ctx.Args(0)
