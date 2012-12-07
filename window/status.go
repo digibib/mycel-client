@@ -5,6 +5,7 @@ import (
 	"github.com/mattn/go-gtk/gtk"
 )
 
+// Status struct represents the status window shown when users are logged in.
 type Status struct {
 	window  *gtk.GtkWindow
 	title   string
@@ -12,6 +13,7 @@ type Status struct {
 	minutes int
 }
 
+// Init acts as a constructor for the Status window struct
 func (v *Status) Init(client, user string, minutes int) {
 	// Inital Window configuration
 	v.window = gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
@@ -20,7 +22,7 @@ func (v *Status) Init(client, user string, minutes int) {
 	v.window.SetTypeHint(gdk.GDK_WINDOW_TYPE_HINT_MENU)
 	v.window.SetSizeRequest(200, 180)
 
-	// Buid GUI
+	// Build GUI
 	userLabel := gtk.Label(user)
 	timeLabel := gtk.Label("")
 	timeLabel.SetMarkup("<span size='xx-large'>" + string(minutes) + " min igjen</span>")
@@ -43,6 +45,7 @@ func (v *Status) Init(client, user string, minutes int) {
 	})
 
 	// Position the window in lower right corner
+	// TODO implement gtk.SetGravity()
 	//window.SetGravity Gdk::Window::GRAVITY_SOUTH_WEST
 	//window.Move (Gdk.screen_width - size[0] - 50), (Gdk.screen_height - size[1] - 50)
 	return

@@ -49,7 +49,7 @@ func Login(client string, extraMinutes int) (user, password string) {
 	window.SetKeepAbove(true)
 	window.SetTitle("Mycel Login")
 
-	// Buid GUI
+	// Build GUI
 	frame := gtk.Frame("Logg deg på " + client)
 	frame.SetLabelAlign(0.5, 0.5)
 	logo := gtk.ImageFromFile("logo.png")
