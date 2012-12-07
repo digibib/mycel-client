@@ -44,6 +44,7 @@ func authenticate(username, password string) (r *response, err error) {
 func Login(client string, extraMinutes int) (user, password string) {
 	// Inital window configuration
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
+	defer window.Destroy()
 	window.Fullscreen()
 	window.SetKeepAbove(true)
 	window.SetTitle("Mycel Login")
