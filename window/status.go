@@ -1,4 +1,4 @@
-package windows
+package window
 
 import (
 	"github.com/mattn/go-gtk/gdk"

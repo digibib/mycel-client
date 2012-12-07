@@ -1,4 +1,4 @@
-package windows
+package window
 
 import (
 	"encoding/json"
