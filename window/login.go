@@ -8,6 +8,7 @@ import (
 	"github.com/mattn/go-gtk/gtk"
 	"net/http"
 	"net/url"
+	"strconv"
 	"unsafe"
 )
 
@@ -41,7 +42,7 @@ func authenticate(username, password string) (r *response, err error) {
 
 // Login creates a GTK fullscreen window where users can log inn.
 // It returns when a user successfully authenticates.
-func Login(client string, extraMinutes int) (user, password string) {
+func Login(client string, extraMinutes, agel, ageh int) (user string) {
 	// Inital window configuration
 	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
 	defer window.Destroy()
@@ -100,7 +101,13 @@ func Login(client string, extraMinutes int) (user, password string) {
 			error.SetMarkup("<span foreground='red'>Beklager, du har brukt opp kvoten din for i dag!</span>")
 			return
 		}
+		if user.Age < agel || user.Age > ageh {
+			error.SetMarkup("<span foreground='red'>Denne maskinen er kun for de mellom " +
+				strconv.Itoa(agel) + " og " + strconv.Itoa(ageh) + "</span>")
+			return
+		}
 		gtk.MainQuit()
+		return
 	}
 	validate := func(ctx *glib.CallbackContext) {
 		arg := ctx.Args(0)
@@ -120,6 +127,7 @@ func Login(client string, extraMinutes int) (user, password string) {
 				return
 			}
 			checkResponse(username, password)
+			return
 		}
 	}
 
@@ -143,6 +151,5 @@ func Login(client string, extraMinutes int) (user, password string) {
 	window.ShowAll()
 	gtk.Main()
 	user = userentry.GetText()
-	password = pinentry.GetText()
 	return
 }

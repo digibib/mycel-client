@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/digibib/mycel-client/windows"
+	"github.com/digibib/mycel-client/window"
 )
 
 type response struct {
@@ -105,10 +105,15 @@ func main() {
 	}
 
 	// Do local mods (screenRes, Firefox Homepage, Printer adress)
-	localMods("1600x900", "http://morgenbladet.no", "socket://10.172.2.31:9000")
+	//localMods("1600x900", "http://morgenbladet.no", "socket://10.172.2.31:9000")
 
 	// Show login screen
 	gtk.Init(nil)
-	user, password := windows.Login(client.Name, *client.Options.Minutes-60)
-	println(user, password)
+	user := window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+	//user := "petter"
+	//window.Status(client.Name, user, 50)
+	status := new(window.Status)
+	status.Init(client.Name, user, 50)
+	status.Show()
+	gtk.Main()
 }
