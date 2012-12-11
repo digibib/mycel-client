@@ -88,7 +88,6 @@ func Login(client string, extraMinutes, agel, ageh int) (user string, minutes in
 	// Functions to validate and check responses
 	checkResponse := func(username, password string) {
 		user, err := authenticate(username, password)
-		minutes = user.Minutes
 		if err != nil {
 			println("DEBUG: call to api/users/authenticate failed")
 			error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
@@ -107,6 +106,7 @@ func Login(client string, extraMinutes, agel, ageh int) (user string, minutes in
 				strconv.Itoa(agel) + " og " + strconv.Itoa(ageh) + "</span>")
 			return
 		}
+		minutes = user.Minutes
 		gtk.MainQuit()
 		return
 	}
