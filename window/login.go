@@ -42,7 +42,7 @@ func authenticate(username, password string) (r *response, err error) {
 
 // Login creates a GTK fullscreen window where users can log inn.
 // It returns when a user successfully authenticates.
-func Login(client string, extraMinutes, agel, ageh int) (user string) {
+func Login(client string, extraMinutes, agel, ageh int) (user string, minutes int) {
 	// Inital window configuration
 	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	defer window.Destroy()
@@ -88,6 +88,7 @@ func Login(client string, extraMinutes, agel, ageh int) (user string) {
 	// Functions to validate and check responses
 	checkResponse := func(username, password string) {
 		user, err := authenticate(username, password)
+		minutes = user.Minutes
 		if err != nil {
 			println("DEBUG: call to api/users/authenticate failed")
 			error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")

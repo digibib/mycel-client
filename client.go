@@ -1,9 +1,12 @@
 package main
 
 import (
+	"code.google.com/p/go.net/websocket"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/mattn/go-gtk/gtk"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -35,6 +38,24 @@ type options struct {
 	Printer  *string `json:"printeraddr"`
 	Homepage *string
 	Minutes  *int `json:"time_limit"`
+}
+
+// logOnMessage represent JSON message to request user to log on client
+type logOnMessage struct {
+	Action string `json:"action"`
+	Client int    `json:"client"`
+	User   string `json:"user"`
+}
+
+// message struct represents all websocket JSON messages other than log-on message
+// TODO rethink this, do I need all fields?
+type message struct {
+	Status string  `json:"status"`
+	User   msgUser `json:"user"`
+}
+
+type msgUser struct {
+	Username string `json:"username"`
 }
 
 // identify sends the client's mac-address to the Mycel API and returns a Client struct.
@@ -109,11 +130,36 @@ func main() {
 
 	// Show login screen
 	gtk.Init(nil)
-	user := window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
-	//user := "petter"
-	//window.Status(client.Name, user, 50)
+	user, minutes := window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+
+	// Request Mycel server to log in
+	conn, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/subscribe/clients/%d", HOST, PORT, client.Id), "", "http://localhost")
+	if err != nil {
+		panic(err)
+	}
+	logonMsg := logOnMessage{Action: "log-on", Client: client.Id, User: user}
+	err = websocket.JSON.Send(conn, logonMsg)
+	if err != nil {
+		fmt.Println("Couldn't send message " + err.Error())
+	}
+	// Wait for "logged-on" confirmation
+	var msg message
+	for {
+		err := websocket.JSON.Receive(conn, &msg)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Couldn't receive msg " + err.Error())
+		}
+
+		if msg.Status == "logged-on" {
+			break
+		}
+	}
+
 	status := new(window.Status)
-	status.Init(client.Name, user, 50)
+	status.Init(client.Name, user, minutes+*client.Options.Minutes-60)
 	status.Show()
 	gtk.Main()
 }
