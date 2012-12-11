@@ -44,36 +44,36 @@ func authenticate(username, password string) (r *response, err error) {
 // It returns when a user successfully authenticates.
 func Login(client string, extraMinutes, agel, ageh int) (user string) {
 	// Inital window configuration
-	window := gtk.Window(gtk.GTK_WINDOW_TOPLEVEL)
+	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	defer window.Destroy()
 	window.Fullscreen()
 	window.SetKeepAbove(true)
 	window.SetTitle("Mycel Login")
 
 	// Build GUI
-	frame := gtk.Frame("Logg deg på " + client)
+	frame := gtk.NewFrame("Logg deg på " + client)
 	frame.SetLabelAlign(0.5, 0.5)
-	logo := gtk.ImageFromFile("logo.png")
-	button := gtk.ButtonWithLabel("Log inn")
-	userlabel := gtk.Label("Lånenummer/brukernavn")
-	pinlabel := gtk.Label("PIN-kode/passord")
-	table := gtk.Table(3, 2, false)
-	userentry := gtk.Entry()
+	logo := gtk.NewImageFromFile("logo.png")
+	button := gtk.NewButtonWithLabel("Log inn")
+	userlabel := gtk.NewLabel("Lånenummer/brukernavn")
+	pinlabel := gtk.NewLabel("PIN-kode/passord")
+	table := gtk.NewTable(3, 2, false)
+	userentry := gtk.NewEntry()
 	userentry.SetMaxLength(10)
 	userentry.SetSizeRequest(150, 23)
-	pinentry := gtk.Entry()
+	pinentry := gtk.NewEntry()
 	pinentry.SetVisibility(false)
 	pinentry.SetMaxLength(10)
 
-	table.Attach(userlabel, 0, 1, 0, 1, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
-	table.Attach(userentry, 1, 2, 0, 1, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
-	table.Attach(pinlabel, 0, 1, 1, 2, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
-	table.Attach(pinentry, 1, 2, 1, 2, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
-	table.Attach(button, 1, 2, 2, 3, gtk.GTK_FILL, gtk.GTK_FILL, 7, 5)
+	table.Attach(userlabel, 0, 1, 0, 1, gtk.FILL, gtk.FILL, 7, 5)
+	table.Attach(userentry, 1, 2, 0, 1, gtk.FILL, gtk.FILL, 7, 5)
+	table.Attach(pinlabel, 0, 1, 1, 2, gtk.FILL, gtk.FILL, 7, 5)
+	table.Attach(pinentry, 1, 2, 1, 2, gtk.FILL, gtk.FILL, 7, 5)
+	table.Attach(button, 1, 2, 2, 3, gtk.FILL, gtk.FILL, 7, 5)
 
-	error := gtk.Label("")
+	error := gtk.NewLabel("")
 
-	vbox := gtk.VBox(false, 20)
+	vbox := gtk.NewVBox(false, 20)
 	vbox.SetBorderWidth(20)
 	vbox.Add(logo)
 	vbox.Add(table)
@@ -81,7 +81,7 @@ func Login(client string, extraMinutes, agel, ageh int) (user string) {
 
 	frame.Add(vbox)
 
-	center := gtk.Alignment(0.5, 0.5, 0, 0)
+	center := gtk.NewAlignment(0.5, 0.5, 0, 0)
 	center.Add(frame)
 	window.Add(center)
 
@@ -114,7 +114,7 @@ func Login(client string, extraMinutes, agel, ageh int) (user string) {
 		kev := *(**gdk.EventKey)(unsafe.Pointer(&arg))
 		username := userentry.GetText()
 		password := pinentry.GetText()
-		if kev.Keyval == gdk.GDK_KEY_Return {
+		if kev.Keyval == gdk.KEY_Return {
 			if username == "" && password == "" {
 				return
 			}
