@@ -218,4 +218,7 @@ func main() {
 		// Don't bother to resend. Server will log off user anyway, when the
 		// connection is closed
 	}
+
+	// Force session restart
+	// /usr/bin/killall /usr/bin/lxsession
 }
