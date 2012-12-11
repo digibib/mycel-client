@@ -197,6 +197,9 @@ func main() {
 			}
 
 			if msg.Status == "ping" {
+				if msg.User.Minutes+extraMinutes <= 0 {
+					gtk.MainQuit()
+				}
 				gdk.ThreadsEnter()
 				status.SetMinutes(msg.User.Minutes + extraMinutes)
 				gdk.ThreadsLeave()
