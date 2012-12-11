@@ -37,9 +37,9 @@ type Client struct {
 type options struct {
 	AgeL     *int    `json:"age_limit_lower"`
 	AgeH     *int    `json:"age_limit_higher"`
+	Minutes  *int    `json:"time_limit"`
 	Printer  *string `json:"printeraddr"`
 	Homepage *string
-	Minutes  *int `json:"time_limit"`
 }
 
 // logOnMessage represent JSON message to request user to log on client
@@ -114,6 +114,44 @@ func localMods(screenRes, homepage, printer string) {
 	}
 }
 
+// connect logs on user. Blocks until successfull and
+// returns the websocket connection
+func connect(username string, client int) (conn *websocket.Conn) {
+	// Request Mycel server to log in
+	for {
+		var err error
+		conn, err = websocket.Dial(fmt.Sprintf("ws://%s:%d/subscribe/clients/%d", HOST, PORT, client), "", "http://localhost")
+		if err != nil {
+			fmt.Println("Can't connect to Mycel websocket server. Trying reconnect in 1 second...")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+	// Create and send log-on request
+	logonMsg := logOnMessage{Action: "log-on", Client: client, User: username}
+	err := websocket.JSON.Send(conn, logonMsg)
+	if err != nil {
+		fmt.Println("Couldn't send message " + err.Error())
+	}
+	// Wait for "logged-on" confirmation
+	var msg message
+	for {
+		err := websocket.JSON.Receive(conn, &msg)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println("Couldn't receive msg " + err.Error())
+		}
+
+		if msg.Status == "logged-on" {
+			break
+		}
+	}
+	return
+}
+
 func main() {
 	// Get the Mac-address of client
 	eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
@@ -135,31 +173,7 @@ func main() {
 	gtk.Init(nil)
 	user, minutes := window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
 
-	// Request Mycel server to log in
-	conn, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/subscribe/clients/%d", HOST, PORT, client.Id), "", "http://localhost")
-	if err != nil {
-		panic(err)
-	}
-	logonMsg := logOnMessage{Action: "log-on", Client: client.Id, User: user}
-	err = websocket.JSON.Send(conn, logonMsg)
-	if err != nil {
-		fmt.Println("Couldn't send message " + err.Error())
-	}
-	// Wait for "logged-on" confirmation
-	var msg message
-	for {
-		err := websocket.JSON.Receive(conn, &msg)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			fmt.Println("Couldn't receive msg " + err.Error())
-		}
-
-		if msg.Status == "logged-on" {
-			break
-		}
-	}
+	conn := connect(user, client.Id)
 
 	gdk.ThreadsInit()
 	status := new(window.Status)
@@ -169,26 +183,14 @@ func main() {
 	// goroutine to check for websocket messages and update status window
 	// with number of minutes left
 	go func() {
+		var msg message
 		for {
 			err := websocket.JSON.Receive(conn, &msg)
 			if err != nil {
 				if err == io.EOF {
 					println("ws disconnected")
-					//try to reconnect
-					conn = func() (conn *websocket.Conn) {
-						for {
-							conn, err = websocket.Dial(fmt.Sprintf("ws://%s:%d/subscribe/clients/%d", HOST, PORT, client.Id), "", "http://localhost")
-							if err != nil {
-								fmt.Println("Connection fails, is being re-connection")
-								time.Sleep(1 * time.Second)
-								continue
-							}
-							break
-						}
-						logonMsg := logOnMessage{Action: "log-on", Client: client.Id, User: user}
-						err = websocket.JSON.Send(conn, logonMsg)
-						return
-					}()
+					// reconnect
+					conn = connect(user, client.Id)
 				}
 				continue
 			}
