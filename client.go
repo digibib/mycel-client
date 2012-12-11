@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
 	"io"
 	"io/ioutil"
@@ -56,6 +57,7 @@ type message struct {
 
 type msgUser struct {
 	Username string `json:"username"`
+	Minutes  int    `json:"minutes"`
 }
 
 // identify sends the client's mac-address to the Mycel API and returns a Client struct.
@@ -158,8 +160,29 @@ func main() {
 		}
 	}
 
+	gdk.ThreadsInit()
 	status := new(window.Status)
-	status.Init(client.Name, user, minutes+*client.Options.Minutes-60)
+	extraMinutes := *client.Options.Minutes - 60
+	status.Init(client.Name, user, minutes+extraMinutes)
 	status.Show()
+	// goroutine to check for websocket messages and update status window
+	// with number of minutes leeft
+	go func() {
+		for {
+			err := websocket.JSON.Receive(conn, &msg)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				fmt.Println("Couldn't receive msg " + err.Error())
+			}
+
+			if msg.Status == "ping" {
+				gdk.ThreadsEnter()
+				status.SetMinutes(msg.User.Minutes + extraMinutes)
+				gdk.ThreadsLeave()
+			}
+		}
+	}()
 	gtk.Main()
 }

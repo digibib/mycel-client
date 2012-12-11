@@ -8,11 +8,12 @@ import (
 
 // Status struct represents the status window shown when users are logged in.
 type Status struct {
-	window  *gtk.Window
-	client  string
-	user    string
-	minutes int
-	warned  bool
+	window    *gtk.Window
+	client    string
+	user      string
+	minutes   int
+	warned    bool
+	timeLabel *gtk.Label
 }
 
 // Init acts as a constructor for the Status window struct
@@ -34,14 +35,14 @@ func (v *Status) Init(client, user string, minutes int) {
 
 	// Build GUI
 	userLabel := gtk.NewLabel(user)
-	timeLabel := gtk.NewLabel("")
-	timeLabel.SetMarkup("<span size='xx-large'>" + strconv.Itoa(v.minutes) + " min igjen</span>")
+	v.timeLabel = gtk.NewLabel("")
+	v.timeLabel.SetMarkup("<span size='xx-large'>" + strconv.Itoa(v.minutes) + " min igjen</span>")
 	button := gtk.NewButtonWithLabel("Logg ut")
 
 	vbox := gtk.NewVBox(false, 20)
 	vbox.SetBorderWidth(5)
 	vbox.Add(userLabel)
-	vbox.Add(timeLabel)
+	vbox.Add(v.timeLabel)
 	vbox.Add(button)
 	v.window.Add(vbox)
 
@@ -64,4 +65,8 @@ func (v *Status) Init(client, user string, minutes int) {
 func (v *Status) Show() {
 	v.window.ShowAll()
 	return
+}
+
+func (v *Status) SetMinutes(minutes int) {
+	v.timeLabel.SetMarkup("<span size='xx-large'>" + strconv.Itoa(minutes) + " min igjen</span>")
 }
