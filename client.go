@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/digibib/mycel-client/window"
 )
@@ -166,15 +167,30 @@ func main() {
 	status.Init(client.Name, user, minutes+extraMinutes)
 	status.Show()
 	// goroutine to check for websocket messages and update status window
-	// with number of minutes leeft
+	// with number of minutes left
 	go func() {
 		for {
 			err := websocket.JSON.Receive(conn, &msg)
 			if err != nil {
 				if err == io.EOF {
-					break
+					println("ws disconnected")
+					//try to reconnect
+					conn = func() (conn *websocket.Conn) {
+						for {
+							conn, err = websocket.Dial(fmt.Sprintf("ws://%s:%d/subscribe/clients/%d", HOST, PORT, client.Id), "", "http://localhost")
+							if err != nil {
+								fmt.Println("Connection fails, is being re-connection")
+								time.Sleep(1 * time.Second)
+								continue
+							}
+							break
+						}
+						logonMsg := logOnMessage{Action: "log-on", Client: client.Id, User: user}
+						err = websocket.JSON.Send(conn, logonMsg)
+						return
+					}()
 				}
-				fmt.Println("Couldn't receive msg " + err.Error())
+				continue
 			}
 
 			if msg.Status == "ping" {
