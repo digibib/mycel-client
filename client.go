@@ -42,8 +42,8 @@ type options struct {
 	Homepage *string
 }
 
-// logOnMessage represent JSON message to request user to log on client
-type logOnMessage struct {
+// logOnOffMessage represent JSON message to request user to log on/off client
+type logOnOffMessage struct {
 	Action string `json:"action"`
 	Client int    `json:"client"`
 	User   string `json:"user"`
@@ -129,7 +129,7 @@ func connect(username string, client int) (conn *websocket.Conn) {
 		break
 	}
 	// Create and send log-on request
-	logonMsg := logOnMessage{Action: "log-on", Client: client, User: username}
+	logonMsg := logOnOffMessage{Action: "log-on", Client: client, User: username}
 	err := websocket.JSON.Send(conn, logonMsg)
 	if err != nil {
 		fmt.Println("Couldn't send message " + err.Error())
@@ -180,6 +180,7 @@ func main() {
 	extraMinutes := *client.Options.Minutes - 60
 	status.Init(client.Name, user, minutes+extraMinutes)
 	status.Show()
+
 	// goroutine to check for websocket messages and update status window
 	// with number of minutes left
 	go func() {
@@ -202,5 +203,16 @@ func main() {
 			}
 		}
 	}()
+
+	// This blocks until the 'logg out' button is clicked, or until the user
+	// has spent all minutes
 	gtk.Main()
+
+	// Send log-out message to server
+	logOffMsg := logOnOffMessage{Action: "log-off", Client: client.Id, User: user}
+	err = websocket.JSON.Send(conn, logOffMsg)
+	if err != nil {
+		// Don't bother to resend. Server will log off user anyway, when the
+		// connection is closed
+	}
 }
