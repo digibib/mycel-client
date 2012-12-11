@@ -68,5 +68,27 @@ func (v *Status) Show() {
 }
 
 func (v *Status) SetMinutes(minutes int) {
-	v.timeLabel.SetMarkup("<span size='xx-large'>" + strconv.Itoa(minutes) + " min igjen</span>")
+	var bg string
+	if minutes <= 5 {
+		bg = "yellow"
+	} else {
+		bg = "#e0e0e0"
+	}
+	v.timeLabel.SetMarkup("<span background='" + bg + "' size='xx-large'>" + strconv.Itoa(minutes) + " min igjen</span>")
+
+	if minutes <= 5 && v.warned == false {
+		msg := "Du blir logget av om " + strconv.Itoa(minutes) + " minutter. Husk å lagre det du jobber med!"
+		md := gtk.NewMessageDialog(v.window.GetTopLevelAsWindow(), gtk.DIALOG_MODAL,
+			gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, msg)
+		md.SetTypeHint(gdk.WINDOW_TYPE_HINT_MENU)
+		md.Connect("response", func() {
+			md.Destroy()
+		})
+		md.ShowAll()
+		v.warned = true
+	}
+
+	if minutes > 5 {
+		v.warned = false
+	}
 }
