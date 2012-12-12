@@ -14,7 +14,13 @@ In addition, you need the GTK development headers:
 Then fetch and compile the client using the go command:
 
     go get github.com/digibib/mycel-client
-    go build client.go
+    go build client.go config.go
+
+The go tool can output target binaries to all major platforms. You set the target architecture by modifying the Go environment variables. Note that you may need additional libraries if you are compiling to another platform than your existing environment. For example, to compile a 32-bit linux binary on a 64-bit system, you may need the following:
+
+    sudo apt-get install libc6-dev-i386 ia32-libs-gtk gcc-multilib
+
+Cross-compiling can be quite complicated. If you can't make it work, just compile it on the target platform.
 
 [Mycel]: https://github.com/digibib/mycel
 [installation instructions]: http://golang.org/doc/install
