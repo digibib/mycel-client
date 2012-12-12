@@ -238,5 +238,6 @@ func main() {
 	}
 
 	// Force session restart
-	// /usr/bin/killall /usr/bin/lxsession
+	cmd := exec.Command("/bin/sh", "-c", "/usr/bin/killall /usr/bin/lxsession")
+	err = cmd.Run()
 }
