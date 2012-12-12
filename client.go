@@ -162,9 +162,15 @@ func main() {
 	MAC := strings.TrimSpace(string(eth0))
 
 	// Identify the client
-	client, err := identify(MAC)
-	if err != nil {
-		log.Fatal(err)
+	var client *Client
+	for {
+		client, err = identify(MAC)
+		if err != nil {
+			fmt.Println("Couldn't reach Mycel server. Trying again in 1 second...")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
 	}
 
 	// Do local mods (screenRes, Firefox Homepage, Printer adress)
