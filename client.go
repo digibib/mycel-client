@@ -64,7 +64,7 @@ type msgUser struct {
 
 // identify sends the client's mac-address to the Mycel API and returns a Client struct.
 func identify(MAC string) (client *Client, err error) {
-	url := "http://localhost:9000/api/clients/?mac=" + MAC
+	url := fmt.Sprintf("http://%s:%s/api/clients/?mac=%s", API_HOST, API_PORT, MAC)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func connect(username string, client int) (conn *websocket.Conn) {
 	// Request Mycel server to log in
 	for {
 		var err error
-		conn, err = websocket.Dial(fmt.Sprintf("ws://%s:%d/subscribe/clients/%d", HOST, PORT, client), "", "http://localhost")
+		conn, err = websocket.Dial(fmt.Sprintf("ws://%s:%s/subscribe/clients/%d", HOST, PORT, client), "", "http://localhost")
 		if err != nil {
 			fmt.Println("Can't connect to Mycel websocket server. Trying reconnect in 1 second...")
 			time.Sleep(1 * time.Second)
@@ -187,7 +187,7 @@ func main() {
 		extraMinutes = 0
 		user = window.ShortTime(client.Name, minutes)
 	} else {
-		user, minutes = window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+		user, minutes = window.Login(API_HOST, API_PORT, client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
 		extraMinutes = *client.Options.Minutes - 60
 	}
 
