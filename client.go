@@ -173,19 +173,21 @@ func main() {
 	// Show login screen
 	gtk.Init(nil)
 	var user string
-	var minutes int
+	var minutes, extraMinutes int
 	if client.ShortTime {
 		minutes = *client.Options.ShortTimeLimit
+		extraMinutes = 0
 		user = window.ShortTime(client.Name, minutes)
 	} else {
 		user, minutes = window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+		extraMinutes = *client.Options.Minutes - 60
 	}
 
 	conn := connect(user, client.Id)
 
 	gdk.ThreadsInit()
 	status := new(window.Status)
-	extraMinutes := *client.Options.Minutes - 60
+
 	status.Init(client.Name, user, minutes+extraMinutes)
 	status.Show()
 
