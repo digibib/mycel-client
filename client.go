@@ -35,11 +35,12 @@ type Client struct {
 // These fields must be pointers, in case of null value from JSON
 // When dereferencing check for nil pointers.
 type options struct {
-	AgeL     *int    `json:"age_limit_lower"`
-	AgeH     *int    `json:"age_limit_higher"`
-	Minutes  *int    `json:"time_limit"`
-	Printer  *string `json:"printeraddr"`
-	Homepage *string
+	AgeL           *int    `json:"age_limit_lower"`
+	AgeH           *int    `json:"age_limit_higher"`
+	Minutes        *int    `json:"time_limit"`
+	ShortTimeLimit *int    `json:"shorttime_limit"`
+	Printer        *string `json:"printeraddr"`
+	Homepage       *string
 }
 
 // logOnOffMessage represent JSON message to request user to log on/off client
@@ -171,7 +172,14 @@ func main() {
 
 	// Show login screen
 	gtk.Init(nil)
-	user, minutes := window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+	var user string
+	var minutes int
+	if client.ShortTime {
+		minutes = *client.Options.ShortTimeLimit
+		user = window.ShortTime(client.Name, minutes)
+	} else {
+		user, minutes = window.Login(client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+	}
 
 	conn := connect(user, client.Id)
 
