@@ -81,40 +81,6 @@ func identify(MAC string) (client *Client, err error) {
 	return &r.Client, nil
 }
 
-// localMods makes modifications to the client's environment.
-func localMods(screenRes, homepage, printer string) {
-	// 1. Screen Resolution
-	xrandr, err := exec.Command("/usr/bin/xrandr").Output()
-	if err != nil {
-		println("DEBUG: couldn't find or access xrandr")
-	}
-	r, _ := regexp.Compile(`([\w]+)\sconnected`)
-	display := r.FindSubmatch(xrandr)[1]
-	cmd := exec.Command("/bin/sh", "-c", "/usr/bin/xrandr --output "+string(display)+" --mode "+screenRes)
-	err = cmd.Run()
-	if err != nil {
-		println("DEBUG: xrandr change mode failed")
-	}
-
-	// 2. Firefox homepage
-	escHomepage := strings.Replace(homepage, `/`, `\/`, -1)
-
-	sed := `/bin/sed -i 's/user_pref("browser.startup.homepage",.*/user_pref("browser.startup.homepage","` +
-		escHomepage + `");/' $HOME/.mozilla/firefox/*.default/prefs.js`
-	cmd = exec.Command("/bin/sh", "-c", sed)
-	err = cmd.Run()
-	if err != nil {
-		println("DEBUG: failed to set Firefox startpage")
-	}
-
-	// 3. Printer address
-	cmd = exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p skranken -v "+printer)
-	err = cmd.Run()
-	if err != nil {
-		println("DEBUG: failed to set network printer address")
-	}
-}
-
 // connect logs on user. Blocks until successfull and
 // returns the websocket connection
 func connect(username string, client int) (conn *websocket.Conn) {
@@ -173,8 +139,44 @@ func main() {
 		break
 	}
 
-	// Do local mods (screenRes, Firefox Homepage, Printer adress)
-	//localMods("1600x900", "http://morgenbladet.no", "socket://10.172.2.31:9000")
+	// Do local modifications to the client's environment
+
+	// 1. Screen Resolution
+	if client.ScreenRes != "auto" {
+		xrandr, err := exec.Command("/usr/bin/xrandr").Output()
+		if err != nil {
+			println("DEBUG: couldn't find or access xrandr")
+		}
+		r, _ := regexp.Compile(`([\w]+)\sconnected`)
+		display := r.FindSubmatch(xrandr)[1]
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/xrandr --output "+string(display)+" --mode "+client.ScreenRes)
+		err = cmd.Run()
+		if err != nil {
+			println("DEBUG: xrandr change mode failed")
+		}
+	}
+
+	// 2. Firefox homepage
+	if client.Options.Homepage != nil {
+		escHomepage := strings.Replace(*client.Options.Homepage, `/`, `\/`, -1)
+
+		sed := `/bin/sed -i 's/user_pref("browser.startup.homepage",.*/user_pref("browser.startup.homepage","` +
+			escHomepage + `");/' $HOME/.mozilla/firefox/*.default/prefs.js`
+		cmd := exec.Command("/bin/sh", "-c", sed)
+		err = cmd.Run()
+		if err != nil {
+			println("DEBUG: failed to set Firefox startpage")
+		}
+	}
+
+	// 3. Printer address
+	if client.Options.Printer != nil {
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p skranken -v "+*client.Options.Printer)
+		err = cmd.Run()
+		if err != nil {
+			println("DEBUG: failed to set network printer address")
+		}
+	}
 
 	// Show login screen
 	gtk.Init(nil)
