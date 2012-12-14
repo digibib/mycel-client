@@ -81,6 +81,7 @@ func (v *Status) SetMinutes(minutes int) {
 		md := gtk.NewMessageDialog(v.window.GetTopLevelAsWindow(), gtk.DIALOG_MODAL,
 			gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, msg)
 		md.SetTypeHint(gdk.WINDOW_TYPE_HINT_MENU)
+		md.SetPosition(gtk.WIN_POS_CENTER)
 		md.Connect("response", func() {
 			md.Destroy()
 		})
