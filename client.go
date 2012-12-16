@@ -149,7 +149,10 @@ func connect(username string, client int) (conn *websocket.Conn) {
 func shutdown() {
 	// Department is closed; force shutdown!
 	cmd := exec.Command("/bin/sh", "-c", "sudo shutdown -P now")
-	err = cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		// Do nothing
+	}
 }
 
 func main() {
