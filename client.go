@@ -147,8 +147,8 @@ func connect(username string, client int) (conn *websocket.Conn) {
 }
 
 func shutdown() {
-	print("We're closed! Shutting down client")
-	cmd := exec.Command("/bin/sh", "-c", "/usr/bin/killall /usr/bin/lxsession")
+	// Department is closed; force shutdown!
+	cmd := exec.Command("/bin/sh", "-c", "sudo shutdown -P now")
 	err = cmd.Run()
 }
 
