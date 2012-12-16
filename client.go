@@ -11,8 +11,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -35,12 +37,39 @@ type Client struct {
 // These fields must be pointers, in case of null value from JSON
 // When dereferencing check for nil pointers.
 type options struct {
+	Hours          *oh     `json:"opening_hours"`
 	AgeL           *int    `json:"age_limit_lower"`
 	AgeH           *int    `json:"age_limit_higher"`
 	Minutes        *int    `json:"time_limit"`
 	ShortTimeLimit *int    `json:"shorttime_limit"`
 	Printer        *string `json:"printeraddr"`
 	Homepage       *string
+}
+
+// Client opening hours
+type oh struct {
+	MonOp *string `json:"monday_opens"`
+	MonCl *string `json:"monday_closes"`
+	MonX  *bool   `json:"monday_closed"`
+	TueOp *string `json:"tuesday_opens"`
+	TueCl *string `json:"tuesday_closes"`
+	TueX  *bool   `json:"tuesday_closed"`
+	SedOp *string `json:"wednsday_opens"`
+	WedCl *string `json:"wednsday_closes"`
+	WedX  *bool   `json:"wednsday_closed"`
+	ThuOp *string `json:"thursday_opens"`
+	ThuCl *string `json:"thursday_closes"`
+	ThuX  *bool   `json:"thursday_closed"`
+	FriOp *string `json:"friday_opens"`
+	FriCl *string `json:"friday_closes"`
+	FriX  *bool   `json:"friday_closed"`
+	SatOp *string `json:"saturday_opens"`
+	SatCl *string `json:"saturday_closes"`
+	SatX  *bool   `json:"saturday_closed"`
+	SunOp *string `json:"sunday_opens"`
+	SunCl *string `json:"sunday_closes"`
+	SunX  *bool   `json:"sunday_closed"`
+	Min   *int    `json:"minutes_before_closing"`
 }
 
 // logOnOffMessage represent JSON message to request user to log on/off client
@@ -51,7 +80,6 @@ type logOnOffMessage struct {
 }
 
 // message struct represents all websocket JSON messages other than log-on message
-// TODO rethink this, do I need all fields?
 type message struct {
 	Status string  `json:"status"`
 	User   msgUser `json:"user"`
@@ -119,6 +147,12 @@ func connect(username string, client int) (conn *websocket.Conn) {
 	return
 }
 
+func shutdown() {
+	print("We're closed! Shutting down client")
+	cmd := exec.Command("/bin/sh", "-c", "/usr/bin/killall /usr/bin/lxsession")
+	err = cmd.Run()
+}
+
 func main() {
 	// Get the Mac-address of client
 	eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
@@ -178,25 +212,88 @@ func main() {
 		}
 	}
 
+	// Get today's closing time from client API response, and force a shutdown
+	// if the department is closed that day
+	var hm string
+	now := time.Now()
+	switch now.Weekday() {
+	case time.Monday:
+		if *client.Options.Hours.MonX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.MonCl
+	case time.Tuesday:
+		if *client.Options.Hours.TueX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.TueCl
+	case time.Wednesday:
+		if *client.Options.Hours.WedX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.WedCl
+	case time.Thursday:
+		if *client.Options.Hours.ThuX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.ThuCl
+	case time.Friday:
+		if *client.Options.Hours.FriX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.FriCl
+	case time.Saturday:
+		if *client.Options.Hours.SatX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.SatCl
+	case time.Sunday:
+		if *client.Options.Hours.SunX {
+			shutdown()
+		}
+		hm = *client.Options.Hours.SunCl
+	}
+
+	// Convert closing time to datetime, and shut down if allready closed
+	hour, _ := strconv.Atoi(hm[0:2])
+	min, _ := strconv.Atoi(hm[3:])
+	closingTime := time.Date(now.Year(), now.Month(), now.Day(), hour, min-*client.Options.Hours.Min, 0, 0, time.Local)
+	if now.After(closingTime) {
+		shutdown()
+	}
+
 	// Show login screen
 	gtk.Init(nil)
 	var user string
-	var minutes, extraMinutes int
+	var userMinutes, extraMinutes int
 	if client.ShortTime {
-		minutes = *client.Options.ShortTimeLimit
+		userMinutes = *client.Options.ShortTimeLimit
 		extraMinutes = 0
-		user = window.ShortTime(client.Name, minutes)
+		user = window.ShortTime(client.Name, userMinutes)
 	} else {
-		user, minutes = window.Login(API_HOST, API_PORT, client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
+		user, userMinutes = window.Login(API_HOST, API_PORT, client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
 		extraMinutes = *client.Options.Minutes - 60
 	}
 
-	conn := connect(user, client.Id)
+	// Calculate how long until closing time.
+	// Adjust minutes acording to closing hours, so that maximum minutes does
+	// not exceed available minutes until closing
+	untilClose := int(closingTime.Sub(now).Minutes())
+	if userMinutes+extraMinutes > untilClose {
+		extraMinutes = untilClose - userMinutes
+	}
+	// This function will trigger and shutdown at closingTime, if the client is
+	// still running.
+	time.AfterFunc(closingTime.Sub(now), func() {
+		shutdown()
+	})
 
+	// Show status window
+	conn := connect(user, client.Id)
 	gdk.ThreadsInit()
 	status := new(window.Status)
 
-	status.Init(client.Name, user, minutes+extraMinutes)
+	status.Init(client.Name, user, userMinutes+extraMinutes)
 	status.Show()
 
 	// goroutine to check for websocket messages and update status window
