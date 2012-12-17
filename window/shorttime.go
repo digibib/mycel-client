@@ -1,7 +1,9 @@
 package window
 
 import (
+	"github.com/mattn/go-gtk/gdkpixbuf"
 	"github.com/mattn/go-gtk/gtk"
+
 	"strconv"
 )
 
@@ -18,7 +20,11 @@ func ShortTime(client string, minutes int) (user string) {
 	// Build GUI
 	frame := gtk.NewFrame("Logg deg på " + client)
 	frame.SetLabelAlign(0.5, 0.5)
-	logo := gtk.NewImageFromFile("logo.png")
+	var imageLoader *gdkpixbuf.Loader
+	imageLoader, _ = gdkpixbuf.NewLoaderWithMimeType("image/png")
+	imageLoader.Write(logo_png())
+	imageLoader.Close()
+	logo := gtk.NewImageFromPixbuf(*imageLoader.GetPixbuf())
 	info := gtk.NewLabel("")
 	info.SetMarkup("<span foreground='red'>Dette er en korttidsmaskin\nMaks " +
 		strconv.Itoa(minutes) + " minutter!</span>")

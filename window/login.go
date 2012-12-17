@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/gdkpixbuf"
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
 	"net/http"
@@ -53,7 +54,11 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 	// Build GUI
 	frame := gtk.NewFrame("Logg deg på " + client)
 	frame.SetLabelAlign(0.5, 0.5)
-	logo := gtk.NewImageFromFile("logo.png")
+	var imageLoader *gdkpixbuf.Loader
+	imageLoader, _ = gdkpixbuf.NewLoaderWithMimeType("image/png")
+	imageLoader.Write(logo_png())
+	imageLoader.Close()
+	logo := gtk.NewImageFromPixbuf(*imageLoader.GetPixbuf())
 	button := gtk.NewButtonWithLabel("Log inn")
 	userlabel := gtk.NewLabel("Lånenummer/brukernavn")
 	pinlabel := gtk.NewLabel("PIN-kode/passord")
