@@ -59,7 +59,7 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 	imageLoader.Write(logo_png())
 	imageLoader.Close()
 	logo := gtk.NewImageFromPixbuf(*imageLoader.GetPixbuf())
-	button := gtk.NewButtonWithLabel("Log inn")
+	button := gtk.NewButtonWithLabel("Logg inn")
 	userlabel := gtk.NewLabel("Lånenummer/brukernavn")
 	pinlabel := gtk.NewLabel("PIN-kode/passord")
 	table := gtk.NewTable(3, 2, false)
