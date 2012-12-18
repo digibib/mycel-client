@@ -95,7 +95,8 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 		user, err := authenticate(API_HOST, API_PORT, username, password)
 		if err != nil {
 			println("DEBUG: call to api/users/authenticate failed")
-			error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
+			//error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
+			error.SetMarkup("<span foreground='red'>Feil lånenummer/brukernavn eller PIN/passord</span>")
 			return
 		}
 		if !user.Authenticated {
