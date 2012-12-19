@@ -1,8 +1,9 @@
 package main
 
 const (
-	HOST     = "localhost"
-	PORT     = "9001"
-	API_HOST = "localhost"
-	API_PORT = "9000"
+	HOST            = "localhost"
+	PORT            = "9001"
+	API_HOST        = "localhost"
+	API_PORT        = "9000"
+	DEFAULT_MINUTES = 60
 )

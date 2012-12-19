@@ -274,7 +274,7 @@ func main() {
 		extraMinutes = 0
 		user = window.ShortTime(client.Name, userMinutes)
 	} else {
-		extraMinutes = *client.Options.Minutes - 60
+		extraMinutes = *client.Options.Minutes - DEFAULT_MINUTES
 		user, userMinutes, userType = window.Login(API_HOST, API_PORT, client.Name, extraMinutes, *client.Options.AgeL, *client.Options.AgeH)
 		if userType == "G" {
 			// If guest user, minutes is user.minutes left or the minutes limit on the client
