@@ -19,6 +19,7 @@ type response struct {
 	Authenticated bool
 	Message       string
 	Minutes       int
+	Type          string
 }
 
 // authenticate returns a user struct response from the mycel API
@@ -43,7 +44,7 @@ func authenticate(API_HOST, API_PORT, username, password string) (r *response, e
 
 // Login creates a GTK fullscreen window where users can log inn.
 // It returns when a user successfully authenticates.
-func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (user string, minutes int) {
+func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (user string, minutes int, userType string) {
 	// Inital window configuration
 	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	defer window.Destroy()
@@ -103,7 +104,11 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 			error.SetMarkup("<span foreground='red'>" + user.Message + "</span>")
 			return
 		}
-		if user.Minutes+extraMinutes <= 0 {
+		if user.Minutes+extraMinutes <= 0 && user.Type != "G" {
+			error.SetMarkup("<span foreground='red'>Beklager, du har brukt opp kvoten din for i dag!</span>")
+			return
+		}
+		if user.Type == "G" && user.Minutes <= 0 {
 			error.SetMarkup("<span foreground='red'>Beklager, du har brukt opp kvoten din for i dag!</span>")
 			return
 		}
@@ -112,6 +117,7 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 				strconv.Itoa(agel) + " og " + strconv.Itoa(ageh) + "</span>")
 			return
 		}
+		userType = user.Type
 		minutes = user.Minutes
 		gtk.MainQuit()
 		return

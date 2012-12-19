@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os/exec"
 	"regexp"
@@ -266,15 +267,20 @@ func main() {
 
 	// Show login screen
 	gtk.Init(nil)
-	var user string
+	var user, userType string
 	var userMinutes, extraMinutes int
 	if client.ShortTime {
 		userMinutes = *client.Options.ShortTimeLimit
 		extraMinutes = 0
 		user = window.ShortTime(client.Name, userMinutes)
 	} else {
-		user, userMinutes = window.Login(API_HOST, API_PORT, client.Name, *client.Options.Minutes-60, *client.Options.AgeL, *client.Options.AgeH)
 		extraMinutes = *client.Options.Minutes - 60
+		user, userMinutes, userType = window.Login(API_HOST, API_PORT, client.Name, extraMinutes, *client.Options.AgeL, *client.Options.AgeH)
+		if userType == "G" {
+			// If guest user, minutes is user.minutes left or the minutes limit on the client
+			userMinutes = int(math.Min(float64(userMinutes), float64(*client.Options.Minutes)))
+			extraMinutes = 0
+		}
 	}
 
 	// Calculate how long until closing time.
