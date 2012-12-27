@@ -278,8 +278,8 @@ func main() {
 		user, userMinutes, userType = window.Login(API_HOST, API_PORT, client.Name, extraMinutes, *client.Options.AgeL, *client.Options.AgeH)
 		if userType == "G" {
 			// If guest user, minutes is user.minutes left or the minutes limit on the client
-			userMinutes = int(math.Min(float64(userMinutes), float64(*client.Options.Minutes)))
-			extraMinutes = 0
+			tempMinutes := int(math.Min(float64(userMinutes), float64(*client.Options.Minutes)))
+			extraMinutes = tempMinutes - userMinutes
 		}
 	}
 
