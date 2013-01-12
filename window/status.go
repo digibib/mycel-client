@@ -57,8 +57,8 @@ func (v *Status) Init(client, user string, minutes int) {
 
 	// Position the window in lower right corner
 	v.window.SetGravity(gdk.GDK_GRAVITY_SOUTH_EAST)
-	scr_w := int(gdk.ScreenWidth())
-	scr_h := int(gdk.ScreenHeight())
+	scr_w := gdk.ScreenWidth()
+	scr_h := gdk.ScreenHeight()
 	v.window.Move(scr_w-220, scr_h-220)
 	return
 }
