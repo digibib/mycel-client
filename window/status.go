@@ -56,9 +56,10 @@ func (v *Status) Init(client, user string, minutes int) {
 	})
 
 	// Position the window in lower right corner
-	// TODO implement gtk.SetGravity()
-	//window.SetGravity Gdk::Window::GRAVITY_SOUTH_WEST
-	//window.Move (Gdk.screen_width - size[0] - 50), (Gdk.screen_height - size[1] - 50)
+	v.window.SetGravity(gdk.GDK_GRAVITY_SOUTH_EAST)
+	scr_w := int(gdk.ScreenWidth())
+	scr_h := int(gdk.ScreenHeight())
+	v.window.Move(scr_w-220, scr_h-220)
 	return
 }
 
