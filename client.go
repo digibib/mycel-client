@@ -307,6 +307,7 @@ func main() {
 
 	status.Init(client.Name, user, userMinutes+extraMinutes)
 	status.Show()
+	status.Move()
 
 	// goroutine to check for websocket messages and update status window
 	// with number of minutes left
