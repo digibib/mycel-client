@@ -169,8 +169,8 @@ func main() {
 	for {
 		client, err = identify(MAC)
 		if err != nil {
-			fmt.Println("Couldn't reach Mycel server. Trying again in 1 second...")
-			time.Sleep(1 * time.Second)
+			fmt.Println("Couldn't reach Mycel server. Trying again in 10 seconds...")
+			time.Sleep(10 * time.Second)
 			continue
 		}
 		break
