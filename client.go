@@ -169,8 +169,12 @@ func main() {
 	for {
 		client, err = identify(MAC)
 		if err != nil {
-			fmt.Println("Couldn't reach Mycel server. Trying again in 10 seconds...")
-			time.Sleep(10 * time.Second)
+			if err.Error() == "404 Not Found" {
+				// Client's MAC adress not in Mycel
+				log.Fatal(err)
+			}
+			fmt.Println("Couldn't reach Mycel server. Trying again in 1 seconds...")
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		break
