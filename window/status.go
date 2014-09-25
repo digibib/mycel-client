@@ -1,9 +1,10 @@
 package window
 
 import (
+	"strconv"
+
 	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
-	"strconv"
 )
 
 // Status struct represents the status window shown when users are logged in.
@@ -82,7 +83,7 @@ func (v *Status) SetMinutes(minutes int) {
 	v.timeLabel.SetMarkup("<span background='" + bg + "' size='xx-large'>" + strconv.Itoa(minutes) + " min igjen</span>")
 
 	if minutes <= 5 && v.warned == false {
-		msg := "Du blir logget av om " + strconv.Itoa(minutes) + " minutter. Husk å lagre det du jobber med!"
+		msg := "Du blir logget av om " + strconv.Itoa(minutes) + " minutter. Husk å lagre det du jobber med!\nLagre på USB-pinne eller send det til deg selv på epost."
 		md := gtk.NewMessageDialog(v.window.GetTopLevelAsWindow(), gtk.DIALOG_MODAL,
 			gtk.MESSAGE_WARNING, gtk.BUTTONS_OK, msg)
 		md.SetTypeHint(gdk.WINDOW_TYPE_HINT_MENU)
