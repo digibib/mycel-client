@@ -212,7 +212,7 @@ func main() {
 
 	// 3. Printer address
 	if client.Options.Printer != nil {
-		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p skranken -v "+*client.Options.Printer)
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
 		err = cmd.Run()
 		if err != nil {
 			println("DEBUG: failed to set network printer address")
