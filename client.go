@@ -148,15 +148,6 @@ func connect(username string, client int) (conn *websocket.Conn) {
 	return
 }
 
-func shutdown() {
-	// Department is closed; force shutdown!
-	cmd := exec.Command("/bin/sh", "-c", "sudo shutdown -P now")
-	err := cmd.Run()
-	if err != nil {
-		// Do nothing
-	}
-}
-
 func main() {
 	// Get the Mac-address of client
 	eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
@@ -220,55 +211,30 @@ func main() {
 		}
 	}
 
-	// Get today's closing time from client API response, and force a shutdown
-	// if the department is closed that day
+	// Get today's closing time from client API response
 	var hm string
 	now := time.Now()
 	switch now.Weekday() {
 	case time.Monday:
-		if *client.Options.Hours.MonX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.MonCl
 	case time.Tuesday:
-		if *client.Options.Hours.TueX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.TueCl
 	case time.Wednesday:
-		if *client.Options.Hours.WedX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.WedCl
 	case time.Thursday:
-		if *client.Options.Hours.ThuX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.ThuCl
 	case time.Friday:
-		if *client.Options.Hours.FriX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.FriCl
 	case time.Saturday:
-		if *client.Options.Hours.SatX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.SatCl
 	case time.Sunday:
-		if *client.Options.Hours.SunX {
-			shutdown()
-		}
 		hm = *client.Options.Hours.SunCl
 	}
 
-	// Convert closing time to datetime, and shut down if allready closed
+	// Convert closing time to datetime
 	hour, _ := strconv.Atoi(hm[0:2])
 	min, _ := strconv.Atoi(hm[3:])
 	closingTime := time.Date(now.Year(), now.Month(), now.Day(), hour, min-*client.Options.Hours.Min, 0, 0, time.Local)
-	if now.After(closingTime) {
-		shutdown()
-	}
 
 	// Show login screen
 	gtk.Init(nil)
@@ -295,11 +261,6 @@ func main() {
 	if userMinutes+extraMinutes > untilClose {
 		extraMinutes = untilClose - userMinutes
 	}
-	// This function will trigger and shutdown at closingTime, if the client is
-	// still running.
-	time.AfterFunc(closingTime.Sub(now), func() {
-		shutdown()
-	})
 
 	// Show status window
 	conn := connect(user, client.Id)
