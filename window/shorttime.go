@@ -24,7 +24,7 @@ func ShortTime(client string, minutes int) (user string) {
 	imageLoader, _ = gdkpixbuf.NewLoaderWithMimeType("image/png")
 	imageLoader.Write(logo_png())
 	imageLoader.Close()
-	logo := gtk.NewImageFromPixbuf(*imageLoader.GetPixbuf())
+	logo := gtk.NewImageFromPixbuf(imageLoader.GetPixbuf())
 	info := gtk.NewLabel("")
 	info.SetMarkup("<span foreground='red'>Dette er en korttidsmaskin\nMaks " +
 		strconv.Itoa(minutes) + " minutter!</span>")

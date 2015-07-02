@@ -1,12 +1,9 @@
 package main
 
 import (
-	"code.google.com/p/go.net/websocket"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mattn/go-gtk/gdk"
-	"github.com/mattn/go-gtk/gtk"
 	"io"
 	"io/ioutil"
 	"log"
@@ -17,6 +14,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"code.google.com/p/go.net/websocket"
+	"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/gtk"
 
 	"github.com/digibib/mycel-client/window"
 )

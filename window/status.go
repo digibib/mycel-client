@@ -66,7 +66,7 @@ func (v *Status) Show() {
 
 func (v *Status) Move() {
 	// Position the window in lower right corner
-	v.window.SetGravity(gdk.GDK_GRAVITY_SOUTH_EAST)
+	v.window.SetGravity(gdk.GRAVITY_SOUTH_EAST)
 	scr_w := gdk.ScreenWidth()
 	scr_h := gdk.ScreenHeight()
 	v.window.Move(scr_w-220, scr_h-220)

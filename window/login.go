@@ -3,14 +3,15 @@ package window
 import (
 	"encoding/json"
 	"errors"
-	"github.com/mattn/go-gtk/gdk"
-	"github.com/mattn/go-gtk/gdkpixbuf"
-	"github.com/mattn/go-gtk/glib"
-	"github.com/mattn/go-gtk/gtk"
 	"net/http"
 	"net/url"
 	"strconv"
 	"unsafe"
+
+	"github.com/mattn/go-gtk/gdk"
+	"github.com/mattn/go-gtk/gdkpixbuf"
+	"github.com/mattn/go-gtk/glib"
+	"github.com/mattn/go-gtk/gtk"
 )
 
 // response struct to match JSON response from api/users/authentication
@@ -59,7 +60,7 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 	imageLoader, _ = gdkpixbuf.NewLoaderWithMimeType("image/png")
 	imageLoader.Write(logo_png())
 	imageLoader.Close()
-	logo := gtk.NewImageFromPixbuf(*imageLoader.GetPixbuf())
+	logo := gtk.NewImageFromPixbuf(imageLoader.GetPixbuf())
 	button := gtk.NewButtonWithLabel("Logg inn")
 	userlabel := gtk.NewLabel("Lånenummer/brukernavn")
 	pinlabel := gtk.NewLabel("PIN-kode/passord")
