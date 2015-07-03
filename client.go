@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"code.google.com/p/go.net/websocket"
 	"github.com/mattn/go-gtk/gdk"
 	"github.com/mattn/go-gtk/gtk"
+	"golang.org/x/net/websocket"
 
 	"github.com/digibib/mycel-client/window"
 )
