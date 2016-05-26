@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"strconv"
 	"unsafe"
 
@@ -119,8 +120,19 @@ func Login(hostAPI, client string, extraMinutes, agel, ageh int) (user string, m
 				strconv.Itoa(agel) + " og " + strconv.Itoa(ageh) + "</span>")
 			return
 		}
+
+		// sucess!
 		userType = user.Type
 		minutes = user.Minutes
+
+		// set printer billing
+		//LNUMMER
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/lpoptions -p publikumsskriver -o job-billing="+username)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Println("failed to set printer billing options: ", string(output))
+		}
+
 		gtk.MainQuit()
 		return
 	}
