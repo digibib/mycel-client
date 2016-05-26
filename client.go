@@ -171,7 +171,7 @@ func main() {
 			if err.Error() == "404 Not Found" {
 				log.Fatal("client MAC address not found in mycel DB: ", MAC)
 			}
-			fmt.Println("Couldn't reach Mycel server. Trying again in 1 seconds...")
+			log.Println("Couldn't reach Mycel server. Trying again in 1 seconds...")
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -184,14 +184,14 @@ func main() {
 	if client.ScreenRes != "auto" {
 		xrandr, err := exec.Command("/usr/bin/xrandr").Output()
 		if err != nil {
-			println("DEBUG: couldn't find or access xrandr")
+			log.Println("failed to run xrandr", err)
 		}
-		r, _ := regexp.Compile(`([\w]+)\sconnected`)
-		display := r.FindSubmatch(xrandr)[1]
+		rgx := regexp.MustCompile(`([\w]+)\sconnected`)
+		display := rgx.FindSubmatch(xrandr)[1]
 		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/xrandr --output "+string(display)+" --mode "+client.ScreenRes)
-		err = cmd.Run()
+		output, err := cmd.CombinedOutput()
 		if err != nil {
-			println("DEBUG: xrandr change mode failed")
+			log.Println("failed to set screen resolution: ", string(output))
 		}
 	}
 
@@ -202,18 +202,18 @@ func main() {
 		sed := `/bin/sed -i 's/user_pref("browser.startup.homepage",.*/user_pref("browser.startup.homepage","` +
 			escHomepage + `");/' $HOME/.mozilla/firefox/*.default/prefs.js`
 		cmd := exec.Command("/bin/sh", "-c", sed)
-		err = cmd.Run()
+		output, err := cmd.CombinedOutput()
 		if err != nil {
-			println("DEBUG: failed to set Firefox startpage")
+			log.Println("failed to set Firefox startpage: ", string(output))
 		}
 	}
 
 	// 3. Printer address
 	if client.Options.Printer != nil {
 		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
-		err = cmd.Run()
+		output, err := cmd.CombinedOutput()
 		if err != nil {
-			println("DEBUG: failed to set network printer address")
+			log.Println("failed to set network printer address:", string(output))
 		}
 	}
 

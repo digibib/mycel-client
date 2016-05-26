@@ -3,6 +3,7 @@ package window
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -96,7 +97,7 @@ func Login(hostAPI, client string, extraMinutes, agel, ageh int) (user string, m
 	checkResponse := func(username, password string) {
 		user, err := authenticate(hostAPI, username, password)
 		if err != nil {
-			println("DEBUG: call to api/users/authenticate failed")
+			log.Println("authentication API call failed: ", err)
 			//error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
 			error.SetMarkup("<span foreground='red'>Feil lånenummer/brukernavn eller PIN/passord</span>")
 			return
