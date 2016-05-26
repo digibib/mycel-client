@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -21,6 +22,8 @@ import (
 
 	"github.com/digibib/mycel-client/window"
 )
+
+const DefaultMinutes = 60
 
 type response struct {
 	Client Client
@@ -92,8 +95,8 @@ type msgUser struct {
 }
 
 // identify sends the client's mac-address to the Mycel API and returns a Client struct.
-func identify(MAC string) (client *Client, err error) {
-	url := fmt.Sprintf("http://%s:%s/api/clients/?mac=%s", API_HOST, API_PORT, MAC)
+func identify(hostAPI, MAC string) (client *Client, err error) {
+	url := fmt.Sprintf("%s/api/clients/?mac=%s", hostAPI, MAC)
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -112,11 +115,11 @@ func identify(MAC string) (client *Client, err error) {
 
 // connect logs on user. Blocks until successfull and
 // returns the websocket connection
-func connect(username string, client int) (conn *websocket.Conn) {
+func connect(hostWS, username string, client int) (conn *websocket.Conn) {
 	// Request Mycel server to log in
 	for {
 		var err error
-		conn, err = websocket.Dial(fmt.Sprintf("ws://%s:%s/subscribe/clients/%d", HOST, PORT, client), "", "http://localhost")
+		conn, err = websocket.Dial(fmt.Sprintf("%s/subscribe/clients/%d", hostWS, client), "", "http://localhost")
 		if err != nil {
 			fmt.Println("Can't connect to Mycel websocket server. Trying reconnect in 1 second...")
 			time.Sleep(1 * time.Second)
@@ -149,6 +152,10 @@ func connect(username string, client int) (conn *websocket.Conn) {
 }
 
 func main() {
+	hostAPI := flag.String("api", "http://mycel:9000", "mycel host (api)")
+	hostWS := flag.String("ws", "ws://mycel:9001", "mycel host (ws)")
+	flag.Parse()
+
 	// Get the Mac-address of client
 	eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
 	if err != nil {
@@ -159,11 +166,10 @@ func main() {
 	// Identify the client
 	var client *Client
 	for {
-		client, err = identify(MAC)
+		client, err = identify(*hostAPI, MAC)
 		if err != nil {
 			if err.Error() == "404 Not Found" {
-				// Client's MAC adress not in Mycel
-				log.Fatal(err)
+				log.Fatal("client MAC address not found in mycel DB: ", MAC)
 			}
 			fmt.Println("Couldn't reach Mycel server. Trying again in 1 seconds...")
 			time.Sleep(1 * time.Second)
@@ -245,8 +251,8 @@ func main() {
 		extraMinutes = 0
 		user = window.ShortTime(client.Name, userMinutes)
 	} else {
-		extraMinutes = *client.Options.Minutes - DEFAULT_MINUTES
-		user, userMinutes, userType = window.Login(API_HOST, API_PORT, client.Name, extraMinutes, *client.Options.AgeL, *client.Options.AgeH)
+		extraMinutes = *client.Options.Minutes - DefaultMinutes
+		user, userMinutes, userType = window.Login(*hostAPI, client.Name, extraMinutes, *client.Options.AgeL, *client.Options.AgeH)
 		if userType == "G" {
 			// If guest user, minutes is user.minutes left or the minutes limit on the client
 			tempMinutes := int(math.Min(float64(userMinutes), float64(*client.Options.Minutes)))
@@ -263,7 +269,7 @@ func main() {
 	}
 
 	// Show status window
-	conn := connect(user, client.Id)
+	conn := connect(*hostWS, user, client.Id)
 	gdk.ThreadsInit()
 	status := new(window.Status)
 
@@ -281,7 +287,7 @@ func main() {
 				if err == io.EOF {
 					println("ws disconnected")
 					// reconnect
-					conn = connect(user, client.Id)
+					conn = connect(*hostWS, user, client.Id)
 				}
 				continue
 			}

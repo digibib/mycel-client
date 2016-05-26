@@ -25,8 +25,8 @@ type response struct {
 
 // authenticate returns a user struct response from the mycel API
 // given a username and password
-func authenticate(API_HOST, API_PORT, username, password string) (r *response, err error) {
-	u := "http://" + API_HOST + ":" + API_PORT + "/api/users/authenticate"
+func authenticate(hostAPI, username, password string) (r *response, err error) {
+	u := hostAPI + "/api/users/authenticate"
 	resp, err := http.PostForm(u, url.Values{"username": {username}, "password": {password}})
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func authenticate(API_HOST, API_PORT, username, password string) (r *response, e
 
 // Login creates a GTK fullscreen window where users can log inn.
 // It returns when a user successfully authenticates.
-func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (user string, minutes int, userType string) {
+func Login(hostAPI, client string, extraMinutes, agel, ageh int) (user string, minutes int, userType string) {
 	// Inital window configuration
 	window := gtk.NewWindow(gtk.WINDOW_TOPLEVEL)
 	defer window.Destroy()
@@ -94,7 +94,7 @@ func Login(API_HOST, API_PORT, client string, extraMinutes, agel, ageh int) (use
 
 	// Functions to validate and check responses
 	checkResponse := func(username, password string) {
-		user, err := authenticate(API_HOST, API_PORT, username, password)
+		user, err := authenticate(hostAPI, username, password)
 		if err != nil {
 			println("DEBUG: call to api/users/authenticate failed")
 			//error.SetMarkup("<span foreground='red'>Fikk ikke kontakt med server, vennligst prøv igjen!</span>")
