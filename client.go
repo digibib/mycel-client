@@ -8,8 +8,10 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"log/syslog"
 	"math"
 	"net/http"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -149,6 +151,16 @@ func connect(hostWS, username string, client int) (conn *websocket.Conn) {
 		}
 	}
 	return
+}
+
+func init() {
+	log.SetFlags(0)
+	syslogW, err := syslog.New(syslog.LOG_ERR, "mycel-client")
+	if err != nil {
+		log.Println("failed to initialize syslog writer: ", err)
+	} else {
+		log.SetOutput(io.MultiWriter(syslogW, os.Stderr))
+	}
 }
 
 func main() {
