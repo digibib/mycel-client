@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -41,15 +42,17 @@ type Client struct {
 	Printers  []printer `json:"printers"`
 }
 
+// Printer struct to match JSON response from Mycel api/clients.
 type printer struct {
-	Name			string `json:"name"`
+	Id			  int			`json:"id"`
+	Name			*string `json:"name"`
 	PPD				*string `json:"ppd_printer"`
 	URI       *string `json:"uri_printer"`
 	Location	*string `json:"location"`
 	Info			*string `json:"info"`
-	// Options		*string `json:"ppd_printer"`
-	IsDefault *bool `json:"is_default"`
+	// Options		*string `json:"..."`
 }
+
 
 // These fields must be pointers, in case of null value from JSON
 // When dereferencing check for nil pointers.
@@ -61,6 +64,7 @@ type options struct {
 	ShortTimeLimit *int    `json:"shorttime_limit"`
 	Printer        *string `json:"printeraddr"`
 	Homepage       *string
+	DefaultPrinterId	*int `json:"default_printer_id"`
 }
 
 // Client opening hours
@@ -100,18 +104,11 @@ type logOnOffMessage struct {
 type message struct {
 	Status string  `json:"status"`
 	User   msgUser `json:"user"`
-	Command string  `json:"command"`
 }
 
 type msgUser struct {
 	Username string `json:"username"`
 	Minutes  int    `json:"minutes"`
-}
-
-type cmdOutput struct {
-	Status string  `json:"status"`
-	Client int  `json:"client"`
-	Output string  `json:"output"`
 }
 
 // identify sends the client's mac-address to the Mycel API and returns a Client struct.
@@ -182,15 +179,13 @@ func init() {
 }
 
 func main() {
-	//hostAPI := flag.String("api", "http://mycel:9000", "mycel host (api)")
-	//hostWS := flag.String("ws", "ws://mycel:9001", "mycel host (ws)")
-	hostAPI := flag.String("api", "http://localhost:9000", "mycel host (api)")
-	hostWS := flag.String("ws", "ws://localhost:9001", "mycel host (ws)")
+	hostAPI := flag.String("api", "http://mycel:9000", "mycel host (api)")
+	hostWS := flag.String("ws", "ws://mycel:9001", "mycel host (ws)")
 	flag.Parse()
 
 	// Get the Mac-address of client
-	// eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
-	eth0, err := ioutil.ReadFile("/sys/class/net/enp10s0/address")
+	//eth0, err := ioutil.ReadFile("/sys/class/net/enp10s0/address")
+	eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -210,6 +205,58 @@ func main() {
 		}
 		break
 	}
+
+	// Send hardware specs to server
+	commands := map[string]string {
+		"ram": "-t 19 | grep 'Range Size:' | awk {'print $3'}",
+		"manufacturer": "-s system-manufacturer",
+		"product_name": "-s system-product-name",
+		"product_version": "-s system-version",
+		"serial_number": "-s system-serial-number",
+		"uuid": "-s system-uuid",
+		"cpu_family": "-s processor-family",
+	}
+
+	sysinfo := map[string]string{}
+	sysinfo["mac"] = MAC
+
+	for key, params := range commands {
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/dmidecode " + params)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Println("failed to gather hw specs: ", string(output))
+		}
+
+		sysinfo[key] = string(output)
+	}
+
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(sysinfo)
+
+	url := fmt.Sprintf("%s/api/client_specs", *hostAPI)
+	_, err = http.Post(url, "application/json; charset=utf-8", b)
+	if err != nil {
+		log.Println("Failed to post hw specs")
+	}
+
+
+	// Create thread to send live signals to server
+	ticker := time.NewTicker(5 * time.Minute)
+	quit := make(chan struct{})
+	keep_alive :=  fmt.Sprintf("%s/api/keep_alive/?mac=%s", *hostAPI, MAC)
+
+	go func() {
+		for {
+			select {
+			case <- ticker.C:
+				http.Get(keep_alive)
+			case <- quit:
+				ticker.Stop()
+				return
+			}
+		}
+		}()
+
 
 	// Do local modifications to the client's environment
 
@@ -241,19 +288,14 @@ func main() {
 		}
 	}
 
-	// 3. Printer address
-	if false && client.Options.Printer != nil {
-		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Println("failed to set network printer address:", string(output))
-		}
-	}
-
-	// Set Printers
+	// 3. Set printer addresses
 	if client.Printers != nil {
 		for _, printer := range client.Printers {
-			pms := " -p " + printer.Name
+			pms := ""
+
+			if (printer.Name != nil) {
+				pms += " -p " + *printer.Name
+			}
 
 			if (printer.PPD != nil) {
 				pms += " -m " + *printer.PPD
@@ -271,21 +313,28 @@ func main() {
 				pms += " -D " + `"` +  *printer.Info + `"`
 			}
 
-
-			log.Println(pms)
 			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin" + pms)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Println("failed to set network printer address:", string(output))
 			}
 
-			if (printer.IsDefault != nil && *printer.IsDefault) {
+			if (client.Options.DefaultPrinterId != nil && printer.Id == *client.Options.DefaultPrinterId) {
 				// set default
+				cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/bin/lpoptions -d " + *printer.Name)
+				output, err := cmd.CombinedOutput()
+				if err != nil {
+					log.Println("failed to set default printer: ", string(output))
+				}
 			}
-
 		}
-	}
-
+		} else if client.Options.Printer != nil { // this can be removed once the new scheme is fully established
+			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Println("failed to set network printer address:", string(output))
+			}
+		}
 
 	// Get today's closing time from client API response
 	var hm string
@@ -369,23 +418,8 @@ func main() {
 				gdk.ThreadsEnter()
 				status.SetMinutes(msg.User.Minutes + extraMinutes)
 				gdk.ThreadsLeave()
-				} else if msg.Status == "cmd" {
-					// cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n " + msg.Command)
-					cmd := exec.Command("/bin/sh", "-c", msg.Command)
-					output, err := cmd.Output()
-					if err != nil {
-						log.Println("failed to execute command: ", msg.Command)
-					} else {
-						println(string(output))
-						// send output as reply
-						outputMsg := cmdOutput{Status: "cmd-output", Client: client.Id, Output: string(output)}
-						err = websocket.JSON.Send(conn, outputMsg)
-						if err != nil {
-							println("det gikk visst ikke all verdens bra...")
-						}
-					}
-				}
 			}
+		}
 	}()
 
 	// This blocks until the 'logg out' button is clicked, or until the user
