@@ -46,11 +46,11 @@ type Client struct {
 type printer struct {
 	Id			  int			`json:"id"`
 	Name			*string `json:"name"`
-	PPD				*string `json:"ppd_printer"`
-	URI       *string `json:"uri_printer"`
+	PPD				*string `json:"ppd_client"`
+	URI       *string `json:"uri_client"`
 	Location	*string `json:"location"`
 	Info			*string `json:"info"`
-	// Options		*string `json:"..."`
+	Options		*string `json:"poptions"`
 }
 
 
@@ -184,7 +184,7 @@ func main() {
 	flag.Parse()
 
 	// Get the Mac-address of client
-	//eth0, err := ioutil.ReadFile("/sys/class/net/enp10s0/address")
+	//eth0, err := ioutil.ReadFile("/sys/class/net/enp0s3/address")
 	eth0, err := ioutil.ReadFile("/sys/class/net/eth0/address")
 	if err != nil {
 		log.Fatal(err)
@@ -294,25 +294,30 @@ func main() {
 			pms := ""
 
 			if (printer.Name != nil) {
-				pms += " -p " + *printer.Name
+				pms += " -p '" + *printer.Name + "' "
+			}
+
+			if (printer.Options != nil) {
+				pms += *printer.Options
 			}
 
 			if (printer.PPD != nil) {
-				pms += " -m " + *printer.PPD
+				pms += " -m '" + *printer.PPD + "'"
 			}
 
 			if (printer.URI != nil) {
-				pms += " -v " + *printer.URI
+				pms += " -v '" + *printer.URI + "'"
 			}
 
 			if (printer.Location != nil) {
-				pms += " -L " + `"` + *printer.Location + `"`
+				pms += " -L '" + *printer.Location + "'"
 			}
 
 			if (printer.Info != nil) {
-				pms += " -D " + `"` +  *printer.Info + `"`
+				pms += " -D '" + *printer.Info + "'"
 			}
 
+			fmt.Println(pms)
 			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin" + pms)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
