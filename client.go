@@ -178,6 +178,83 @@ func init() {
 	}
 }
 
+func setPrinters(hostAPI, MAC string) {
+	// Reloads client info to catch any printer setting updates
+	url := fmt.Sprintf("%s/api/clients/?mac=%s", hostAPI, MAC)
+	resp, err := http.Get(url)
+	if err != nil {
+		log.Println("failed to reload client info: ", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Println("failed to reload client info")
+		return
+	}
+	r := new(response)
+	err = json.NewDecoder(resp.Body).Decode(r)
+	if err != nil {
+		log.Println("failed to parse client info")
+		return
+	}
+
+	var client *Client = &r.Client
+
+	if client.Printers != nil {
+		for _, printer := range client.Printers {
+			pms := ""
+
+			if (printer.Name != nil) {
+				pms += " -p '" + *printer.Name + "' "
+			}
+
+			if (printer.Options != nil) {
+				pms += *printer.Options
+			}
+
+			if (printer.PPD != nil) {
+				pms += " -m '" + *printer.PPD + "'"
+			}
+
+			if (printer.URI != nil) {
+				pms += " -v '" + *printer.URI + "'"
+			}
+
+			if (printer.Location != nil) {
+				pms += " -L '" + *printer.Location + "'"
+			}
+
+			if (printer.Info != nil) {
+				pms += " -D '" + *printer.Info + "'"
+			}
+
+			fmt.Println(pms)
+			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin" + pms)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Println("failed to set network printer address:", string(output))
+			}
+
+			if (client.Options.DefaultPrinterId != nil && printer.Id == *client.Options.DefaultPrinterId) {
+				// set default
+				cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/bin/lpoptions -d " + *printer.Name)
+				output, err := cmd.CombinedOutput()
+				if err != nil {
+					log.Println("failed to set default printer: ", string(output))
+				}
+			}
+		}
+		} else if client.Options.Printer != nil { // this can be removed once the new scheme is fully established
+			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Println("failed to set network printer address:", string(output))
+			}
+		}
+}
+
+
+
 func main() {
 	hostAPI := flag.String("api", "http://mycel:9000", "mycel host (api)")
 	hostWS := flag.String("ws", "ws://mycel:9001", "mycel host (ws)")
@@ -288,59 +365,6 @@ func main() {
 		}
 	}
 
-	// 3. Set printer addresses
-	if client.Printers != nil {
-		for _, printer := range client.Printers {
-			pms := ""
-
-			if (printer.Name != nil) {
-				pms += " -p '" + *printer.Name + "' "
-			}
-
-			if (printer.Options != nil) {
-				pms += *printer.Options
-			}
-
-			if (printer.PPD != nil) {
-				pms += " -m '" + *printer.PPD + "'"
-			}
-
-			if (printer.URI != nil) {
-				pms += " -v '" + *printer.URI + "'"
-			}
-
-			if (printer.Location != nil) {
-				pms += " -L '" + *printer.Location + "'"
-			}
-
-			if (printer.Info != nil) {
-				pms += " -D '" + *printer.Info + "'"
-			}
-
-			fmt.Println(pms)
-			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin" + pms)
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				log.Println("failed to set network printer address:", string(output))
-			}
-
-			if (client.Options.DefaultPrinterId != nil && printer.Id == *client.Options.DefaultPrinterId) {
-				// set default
-				cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/bin/lpoptions -d " + *printer.Name)
-				output, err := cmd.CombinedOutput()
-				if err != nil {
-					log.Println("failed to set default printer: ", string(output))
-				}
-			}
-		}
-		} else if client.Options.Printer != nil { // this can be removed once the new scheme is fully established
-			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				log.Println("failed to set network printer address:", string(output))
-			}
-		}
-
 	// Get today's closing time from client API response
 	var hm string
 	now := time.Now()
@@ -394,6 +418,8 @@ func main() {
 
 	// Show status window
 	conn := connect(*hostWS, user, client.Id)
+	// User has logged - set printers
+	setPrinters(*hostAPI, MAC)
 	gdk.ThreadsInit()
 	status := new(window.Status)
 
