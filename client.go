@@ -311,10 +311,13 @@ func main() {
 	json.NewEncoder(b).Encode(sysinfo)
 
 	url := fmt.Sprintf("%s/api/client_specs", *hostAPI)
-	_, err = http.Post(url, "application/json; charset=utf-8", b)
+	resp, err := http.Post(url, "application/json; charset=utf-8", b)
 	if err != nil {
 		log.Println("Failed to post hw specs")
 	}
+
+	resp.Body.Close()
+
 
 
 	// Create thread to send live signals to server
@@ -326,7 +329,8 @@ func main() {
 		for {
 			select {
 			case <- ticker.C:
-				http.Get(keep_alive)
+				resp, _ := http.Get(keep_alive)
+				resp.Body.Close()
 			case <- quit:
 				ticker.Stop()
 				return
