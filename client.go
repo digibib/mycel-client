@@ -286,12 +286,12 @@ func main() {
 	// Send hardware specs to server
 	commands := map[string]string {
 		"ram": "-t 19 | grep 'Range Size:' | awk {'print $3'}",
-		"manufacturer": "-s system-manufacturer",
-		"product_name": "-s system-product-name",
-		"product_version": "-s system-version",
-		"serial_number": "-s system-serial-number",
-		"uuid": "-s system-uuid",
-		"cpu_family": "-s processor-family",
+		"manufacturer": "-t 1 | grep 'Manufacturer:' | cut -d':' -f2 | cut -c2-",
+		"product_name": "-t 1 | grep 'Product Name:' | cut -d':' -f2 | cut -c2-",
+		"product_version": "-t 1 | grep 'Version:' | cut -d':' -f2 | cut -c2-",
+		"serial_number": "-t 1 | grep 'Serial Number:' | cut -d':' -f2 | cut -c2-",
+		"uuid": "-t 1 | grep 'UUID:' | cut -d':' -f2 | cut -c2-",
+		"cpu_family": "sudo dmidecode -t 4 | grep 'Family:' | cut -d':' -f2 | cut -c2-"
 	}
 
 	sysinfo := map[string]string{}
