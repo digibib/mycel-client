@@ -291,7 +291,7 @@ func main() {
 		"product_version": "-t 1 | grep 'Version:' | cut -d':' -f2 | cut -c2-",
 		"serial_number": "-t 1 | grep 'Serial Number:' | cut -d':' -f2 | cut -c2-",
 		"uuid": "-t 1 | grep 'UUID:' | cut -d':' -f2 | cut -c2-",
-		"cpu_family": "-t 4 | grep 'Family:' | cut -d':' -f2 | cut -c2-"
+		"cpu_family": "-t 4 | grep 'Family:' | cut -d':' -f2 | cut -c2-",
 	}
 
 	sysinfo := map[string]string{}
