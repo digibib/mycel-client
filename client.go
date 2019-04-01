@@ -38,33 +38,32 @@ type Client struct {
 	Name      string
 	ScreenRes string `json:"screen_resolution"`
 	ShortTime bool
-	Options   options `json:"options_inherited"`
+	Options   options   `json:"options_inherited"`
 	Printers  []printer `json:"printers"`
 }
 
 // Printer struct to match JSON response from Mycel api/clients.
 type printer struct {
-	Id			  int			`json:"id"`
-	Name			*string `json:"name"`
-	PPD				*string `json:"ppd_client"`
-	URI       *string `json:"uri_client"`
-	Location	*string `json:"location"`
-	Info			*string `json:"info"`
-	Options		*string `json:"poptions"`
+	Id       int     `json:"id"`
+	Name     *string `json:"name"`
+	PPD      *string `json:"ppd_client"`
+	URI      *string `json:"uri_client"`
+	Location *string `json:"location"`
+	Info     *string `json:"info"`
+	Options  *string `json:"poptions"`
 }
-
 
 // These fields must be pointers, in case of null value from JSON
 // When dereferencing check for nil pointers.
 type options struct {
-	Hours          *oh     `json:"opening_hours"`
-	AgeL           *int    `json:"age_limit_lower"`
-	AgeH           *int    `json:"age_limit_higher"`
-	Minutes        *int    `json:"time_limit"`
-	ShortTimeLimit *int    `json:"shorttime_limit"`
-	Printer        *string `json:"printeraddr"`
-	Homepage       *string
-	DefaultPrinterId	*int `json:"default_printer_id"`
+	Hours            *oh     `json:"opening_hours"`
+	AgeL             *int    `json:"age_limit_lower"`
+	AgeH             *int    `json:"age_limit_higher"`
+	Minutes          *int    `json:"time_limit"`
+	ShortTimeLimit   *int    `json:"shorttime_limit"`
+	Printer          *string `json:"printeraddr"`
+	Homepage         *string
+	DefaultPrinterId *int `json:"default_printer_id"`
 }
 
 // Client opening hours
@@ -204,56 +203,54 @@ func setPrinters(hostAPI, MAC string) {
 		for _, printer := range client.Printers {
 			pms := ""
 
-			if (printer.Name != nil) {
+			if printer.Name != nil {
 				pms += " -p '" + *printer.Name + "' "
 			}
 
-			if (printer.Options != nil) {
+			if printer.Options != nil {
 				pms += *printer.Options
 			}
 
-			if (printer.PPD != nil) {
+			if printer.PPD != nil {
 				pms += " -m '" + *printer.PPD + "'"
 			}
 
-			if (printer.URI != nil) {
+			if printer.URI != nil {
 				pms += " -v '" + *printer.URI + "'"
 			}
 
-			if (printer.Location != nil) {
+			if printer.Location != nil {
 				pms += " -L '" + *printer.Location + "'"
 			}
 
-			if (printer.Info != nil) {
+			if printer.Info != nil {
 				pms += " -D '" + *printer.Info + "'"
 			}
 
 			fmt.Println(pms)
-			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin" + pms)
+			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin"+pms)
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Println("failed to set network printer address:", string(output))
 			}
 
-			if (client.Options.DefaultPrinterId != nil && printer.Id == *client.Options.DefaultPrinterId) {
+			if client.Options.DefaultPrinterId != nil && printer.Id == *client.Options.DefaultPrinterId {
 				// set default
-				cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/bin/lpoptions -d " + *printer.Name)
+				cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/bin/lpoptions -d "+*printer.Name)
 				output, err := cmd.CombinedOutput()
 				if err != nil {
 					log.Println("failed to set default printer: ", string(output))
 				}
 			}
 		}
-		} else if client.Options.Printer != nil { // this can be removed once the new scheme is fully established
-			cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
-			output, err := cmd.CombinedOutput()
-			if err != nil {
-				log.Println("failed to set network printer address:", string(output))
-			}
+	} else if client.Options.Printer != nil { // this can be removed once the new scheme is fully established
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/lpadmin -p publikumsskriver -v "+*client.Options.Printer)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Println("failed to set network printer address:", string(output))
 		}
+	}
 }
-
-
 
 func main() {
 	hostAPI := flag.String("api", "http://mycel:9000", "mycel host (api)")
@@ -284,21 +281,21 @@ func main() {
 	}
 
 	// Send hardware specs to server
-	commands := map[string]string {
-		"ram": "-t 19 | grep 'Range Size:' | awk {'print $3'}",
-		"manufacturer": "-t 1 | grep 'Manufacturer:' | cut -d':' -f2 | cut -c2-",
-		"product_name": "-t 1 | grep 'Product Name:' | cut -d':' -f2 | cut -c2-",
+	commands := map[string]string{
+		"ram":             "-t 19 | grep 'Range Size:' | awk {'print $3'}",
+		"manufacturer":    "-t 1 | grep 'Manufacturer:' | cut -d':' -f2 | cut -c2-",
+		"product_name":    "-t 1 | grep 'Product Name:' | cut -d':' -f2 | cut -c2-",
 		"product_version": "-t 1 | grep 'Version:' | cut -d':' -f2 | cut -c2-",
-		"serial_number": "-t 1 | grep 'Serial Number:' | cut -d':' -f2 | cut -c2-",
-		"uuid": "-t 1 | grep 'UUID:' | cut -d':' -f2 | cut -c2-",
-		"cpu_family": "-t 4 | grep 'Family:' | cut -d':' -f2 | cut -c2-",
+		"serial_number":   "-t 1 | grep 'Serial Number:' | cut -d':' -f2 | cut -c2-",
+		"uuid":            "-t 1 | grep 'UUID:' | cut -d':' -f2 | cut -c2-",
+		"cpu_family":      "-t 4 | grep 'Family:' | cut -d':' -f2 | cut -c2-",
 	}
 
 	sysinfo := map[string]string{}
 	sysinfo["mac"] = MAC
 
 	for key, params := range commands {
-		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/dmidecode " + params)
+		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/sudo -n /usr/sbin/dmidecode "+params)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			log.Println("failed to gather hw specs: ", string(output))
@@ -318,26 +315,23 @@ func main() {
 
 	resp.Body.Close()
 
-
-
 	// Create thread to send live signals to server
 	ticker := time.NewTicker(5 * time.Minute)
 	quit := make(chan struct{})
-	keep_alive :=  fmt.Sprintf("%s/api/keep_alive/?mac=%s", *hostAPI, MAC)
+	keep_alive := fmt.Sprintf("%s/api/keep_alive/?mac=%s", *hostAPI, MAC)
 
 	go func() {
 		for {
 			select {
-			case <- ticker.C:
+			case <-ticker.C:
 				resp, _ := http.Get(keep_alive)
 				resp.Body.Close()
-			case <- quit:
+			case <-quit:
 				ticker.Stop()
 				return
 			}
 		}
-		}()
-
+	}()
 
 	// Do local modifications to the client's environment
 
