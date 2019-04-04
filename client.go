@@ -324,8 +324,12 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				resp, _ := http.Get(keep_alive)
-				resp.Body.Close()
+				resp, err := http.Get(keep_alive)
+				if err != nil {
+					log.Printf("keep-alive call to %q failed: %v", keep_alive, err)
+				} else {
+					resp.Body.Close()
+				}
 			case <-quit:
 				ticker.Stop()
 				return
