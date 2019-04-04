@@ -127,11 +127,12 @@ func Login(hostAPI, client string, extraMinutes, agel, ageh int) (user string, m
 
 		// set printer billing
 		//LNUMMER
-		cmd := exec.Command("/bin/sh", "-c", "/usr/bin/lpoptions -p publikumsskriver -o job-billing="+username)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Println("failed to set printer billing options: ", string(output))
-		}
+		// Never used so disabling
+		//cmd := exec.Command("/bin/sh", "-c", "/usr/bin/lpoptions -p publikumsskriver -o job-billing="+username)
+		//output, err := cmd.CombinedOutput()
+		//if err != nil {
+		//	log.Println("failed to set printer billing options: ", string(output))
+		//}
 
 		gtk.MainQuit()
 		return
