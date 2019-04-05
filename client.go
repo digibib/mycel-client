@@ -468,6 +468,6 @@ func main() {
 	}
 
 	// Force session restart
-	cmd := exec.Command("/bin/sh", "-c", "/bin/sh", "-c", "/srv/pubterm/restart-session.sh")
+	cmd := exec.Command("/bin/sh", "-c", "/srv/pubterm/restart-session.sh")
 	err = cmd.Run()
 }
